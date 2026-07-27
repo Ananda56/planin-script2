@@ -1,16 +1,8 @@
 -- =================================================================
--- 🐟 PlaninHub - FIXED VERSION (Safe Mode)
+-- 🐟 PlaninHub - Orion Library Edition (รองรับทุกตัวรัน 100%)
 -- =================================================================
 
-local success, Rayfield = pcall(function()
-    return loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
-end)
-
-if not success then
-    warn("ไม่สามารถโหลด Rayfield UI ได้ โปรดตรวจสอบอินเทอร์เน็ตหรือตัวรันของคุณ")
-    return
-end
-
+local OrionLib = loadstring(game:HttpGet(('https://raw.githubusercontent.com/shlexware/Orion/main/source')))()
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local LocalPlayer = Players.LocalPlayer
@@ -25,18 +17,22 @@ local States = {
 }
 
 -- =================================================================
--- 1. สร้างปุ่มลอยเปิด/ปิดแบบปลอดภัย (ป้องกัน CoreGui Error)
+-- 1. สร้างหน้าต่างหลัก Orion
+-- =================================================================
+local Window = OrionLib:MakeWindow({
+    Name = "🐟 PlaninHub",
+    HidePremium = false,
+    SaveConfig = false,
+    ConfigFolder = "PlaninHub"
+})
+
+-- =================================================================
+-- 2. สร้างปุ่มลอยเปิด/ปิดแบบปลอดภัย
 -- =================================================================
 local ScreenGui = Instance.new("ScreenGui")
-ScreenGui.Name = "PlaninHubToggleSafe"
-
--- ใช้ pcall เพื่อป้องกัน Error หากตัวรันไม่มีสิทธิ์เข้าถึง CoreGui
-local guiSuccess, _ = pcall(function()
-    ScreenGui.Parent = game:GetService("CoreGui")
-end)
-if not guiSuccess then
-    ScreenGui.Parent = LocalPlayer:WaitForChild("PlayerGui")
-end
+ScreenGui.Name = "PlaninHubToggleUI"
+pcall(function() ScreenGui.Parent = game:GetService("CoreGui") end)
+if not ScreenGui.Parent then ScreenGui.Parent = LocalPlayer:WaitForChild("PlayerGui") end
 
 local ToggleUIBtn = Instance.new("TextButton")
 ToggleUIBtn.Size = UDim2.new(0, 120, 0, 40)
@@ -58,48 +54,38 @@ UIStroke.Thickness = 2
 UIStroke.Parent = ToggleUIBtn
 
 ToggleUIBtn.MouseButton1Click:Connect(function()
-    game:GetService("VirtualInputManager"):SendKeyEvent(true, Enum.KeyCode.RightControl, false, game)
-    game:GetService("VirtualInputManager"):SendKeyEvent(false, Enum.KeyCode.RightControl, false, game)
+    -- ค้นหาและปิด/เปิดหน้าต่าง Orion
+    local orionGui = nil
+    pcall(function() orionGui = game:GetService("CoreGui"):FindFirstChild("Orion") end)
+    if not orionGui then orionGui = LocalPlayer.PlayerGui:FindFirstChild("Orion") end
+    
+    if orionGui then
+        orionGui.Enabled = not orionGui.Enabled
+    end
 end)
 
 -- =================================================================
--- 2. สร้างหน้าต่างหลัก
+-- 3. แท็บ: ฟาร์มเงิน
 -- =================================================================
-local Window = Rayfield:CreateWindow({
-    Name = "PlaninHub",
-    LoadingTitle = "กำลังโหลด PlaninHub...",
-    LoadingSubtitle = "ความเร็ว, บิน, ล่องหน, ฟาร์มเงิน",
-    ConfigurationSaving = { Enabled = false },
-    KeySystem = false
-})
+local MoneyTab = Window:MakeTab({Name = "ฟาร์มเงิน", Icon = "rbxassetid://4483345998", PremiumOnly = false})
 
--- ลบ Icon แบบ String ออก เพื่อป้องกันหน้าต่างบัคว่างเปล่า
-local MoneyTab = Window:CreateTab("ฟาร์มเงิน")
-local MainTab = Window:CreateTab("เมนูหลัก")
-local PlayerTab = Window:CreateTab("ตัวละคร")
-
--- =================================================================
--- 3. ระบบเสกเงิน
--- =================================================================
-MoneyTab:CreateSection("เสกเหรียญ / กล่อง")
-
-MoneyTab:CreateInput({
+MoneyTab:AddTextbox({
     Name = "ระบุจำนวนที่ต้องการเสก",
-    PlaceholderText = "พิมพ์ตัวเลข...",
-    RemoveTextAfterFocusLost = false,
-    Callback = function(Text)
-        States.SpawnAmount = tonumber(Text) or 1
-    end,
+    Default = "1",
+    TextDisappear = false,
+    Callback = function(Value)
+        States.SpawnAmount = tonumber(Value) or 1
+    end      
 })
 
-MoneyTab:CreateButton({
+MoneyTab:AddButton({
     Name = "💰 กดเสกเงิน",
     Callback = function()
         pcall(function()
             local Event = LocalPlayer:FindFirstChild("ninjaEvent") or (LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("ninjaEvent"))
             if Event then
                 local function GetNil(Name)
-                    for _, Object in getnilinstances() do
+                    for _, Object in pairs(getnilinstances()) do
                         if Object.Name == Name then return Object end
                     end
                     return nil
@@ -111,60 +97,49 @@ MoneyTab:CreateButton({
                     for i = 1, States.SpawnAmount do
                         firesignal(Event.OnClientEvent, "collectCoin", targetCrate)
                     end
-                    Rayfield:Notify({Title = "สำเร็จ", Content = "เสกเงิน " .. States.SpawnAmount .. " ครั้ง", Duration = 3})
+                    OrionLib:MakeNotification({Name = "สำเร็จ", Content = "เสกเงินจำนวน " .. States.SpawnAmount .. " ครั้ง", Image = "rbxassetid://4483345998", Time = 3})
                 else
-                    Rayfield:Notify({Title = "ผิดพลาด", Content = "ไม่พบกล่อง Chi Crate", Duration = 3})
+                    OrionLib:MakeNotification({Name = "ผิดพลาด", Content = "ไม่พบกล่อง Chi Crate ในด่านนี้", Image = "rbxassetid://4483345998", Time = 3})
                 end
+            else
+                OrionLib:MakeNotification({Name = "ผิดพลาด", Content = "ไม่พบ Event ของเกมนี้", Image = "rbxassetid://4483345998", Time = 3})
             end
         end)
-    end,
+    end    
 })
 
 -- =================================================================
--- 4. ระบบวิ่งเร็ว
+-- 4. แท็บ: เมนูหลัก (ความเร็ว & บิน)
 -- =================================================================
-MainTab:CreateSection("ตั้งค่าความเร็ว")
+local MainTab = Window:MakeTab({Name = "เมนูหลัก", Icon = "rbxassetid://4483345998", PremiumOnly = false})
 
-MainTab:CreateToggle({
+MainTab:AddToggle({
     Name = "เปิดใช้งาน วิ่งเร็ว",
-    CurrentValue = false,
-    Flag = "ToggleWalkSpeed",
+    Default = false,
     Callback = function(Value)
         States.WalkSpeedEnabled = Value
-    end,
+    end    
 })
 
-MainTab:CreateSlider({
+MainTab:AddSlider({
     Name = "ระดับความเร็ว",
-    Range = {16, 500},
+    Min = 16,
+    Max = 500,
+    Default = 16,
+    Color = Color3.fromRGB(255,255,255),
     Increment = 1,
-    Suffix = "Speed",
-    CurrentValue = 16,
-    Flag = "SliderWalkSpeed",
+    ValueName = "Speed",
     Callback = function(Value)
         States.WalkSpeed = Value
-    end,
+    end    
 })
 
-RunService.RenderStepped:Connect(function()
-    pcall(function()
-        if States.WalkSpeedEnabled and LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") then
-            LocalPlayer.Character.Humanoid.WalkSpeed = States.WalkSpeed
-        end
-    end)
-end)
-
--- =================================================================
--- 5. ระบบบิน
--- =================================================================
-MainTab:CreateSection("ตั้งค่าการบิน")
 local FlyBodyVelocity = nil
 local FlyBodyGyro = nil
 
-MainTab:CreateToggle({
+MainTab:AddToggle({
     Name = "เปิดใช้งาน บิน",
-    CurrentValue = false,
-    Flag = "ToggleFly",
+    Default = false,
     Callback = function(Value)
         States.FlyEnabled = Value
         pcall(function()
@@ -191,29 +166,37 @@ MainTab:CreateToggle({
                 end
             end
         end)
-    end,
+    end    
 })
 
-MainTab:CreateSlider({
+MainTab:AddSlider({
     Name = "ความเร็วการบิน",
-    Range = {10, 500},
+    Min = 10,
+    Max = 500,
+    Default = 50,
+    Color = Color3.fromRGB(255,255,255),
     Increment = 1,
-    Suffix = "Speed",
-    CurrentValue = 50,
-    Flag = "SliderFlySpeed",
+    ValueName = "Speed",
     Callback = function(Value)
         States.FlySpeed = Value
-    end,
+    end    
 })
 
+-- ลูปอัปเดตความเร็ว & บิน
 RunService.RenderStepped:Connect(function()
     pcall(function()
-        if States.FlyEnabled and LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
-            local hrp = LocalPlayer.Character.HumanoidRootPart
-            local camera = workspace.CurrentCamera
-            local moveDir = LocalPlayer.Character.Humanoid.MoveDirection
+        local char = LocalPlayer.Character
+        if char then
+            -- วิ่ง
+            if States.WalkSpeedEnabled and char:FindFirstChild("Humanoid") then
+                char.Humanoid.WalkSpeed = States.WalkSpeed
+            end
             
-            if FlyBodyVelocity and FlyBodyGyro then
+            -- บิน
+            if States.FlyEnabled and char:FindFirstChild("HumanoidRootPart") and FlyBodyVelocity and FlyBodyGyro then
+                local camera = workspace.CurrentCamera
+                local moveDir = char.Humanoid.MoveDirection
+                
                 FlyBodyGyro.CFrame = camera.CFrame
                 if moveDir.Magnitude > 0 then
                     FlyBodyVelocity.Velocity = camera.CFrame.LookVector * (moveDir.Z * -States.FlySpeed) + camera.CFrame.RightVector * (moveDir.X * States.FlySpeed)
@@ -226,14 +209,13 @@ RunService.RenderStepped:Connect(function()
 end)
 
 -- =================================================================
--- 6. ระบบล่องหน
+-- 5. แท็บ: ตัวละคร (ล่องหน)
 -- =================================================================
-PlayerTab:CreateSection("สถานะตัวละคร")
+local PlayerTab = Window:MakeTab({Name = "ตัวละคร", Icon = "rbxassetid://4483345998", PremiumOnly = false})
 
-PlayerTab:CreateToggle({
-    Name = "ล่องหน (Client-Side)",
-    CurrentValue = false,
-    Flag = "ToggleInvisible",
+PlayerTab:AddToggle({
+    Name = "เปิดใช้งาน ล่องหน (Client-Side)",
+    Default = false,
     Callback = function(Value)
         States.Invisible = Value
         pcall(function()
@@ -253,5 +235,7 @@ PlayerTab:CreateToggle({
                 end
             end
         end)
-    end,
+    end    
 })
+
+OrionLib:Init()
