@@ -5,6 +5,7 @@
 local Players = game:GetService("Players")
 local TweenService = game:GetService("TweenService")
 local RunService = game:GetService("RunService")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local LocalPlayer = Players.LocalPlayer
 
 -- Theme Color Definitions (7 Colors)
@@ -24,21 +25,41 @@ local CurrentThemeName = "Purple"
 -- States & Logic Variables
 local States = {
     BoostFPS = false,
-    AutoFarm = false, -- ระบบฟาร์มดาบอัตโนมัติ (ninjaEvent)
+    AutoFarm = false, -- สถานะเปิดปิดฟาร์มดาบอัตโนมัติ
     WalkSpeed = 16,
     JumpHeight = 50,
     FakeFPSValue = 60
 }
 
--- Thread สำหรับ Auto Farm ดาบอัตโนมัติ (ย้ำการกด Remote Ninja Event)
+-- ฟังก์ชันค้นหา Remote Event ของเกม (รองรับทั้งใน Player และ ReplicatedStorage)
+local function GetNinjaRemote()
+    if LocalPlayer:FindFirstChild("ninjaEvent") then
+        return LocalPlayer.ninjaEvent
+    end
+    if ReplicatedStorage:FindFirstChild("ninjaEvent") then
+        return ReplicatedStorage.ninjaEvent
+    end
+    -- ค้นหาสำรองเผื่อเจอรีโมทที่เกี่ยวข้องกับการฟาร์มดาบ
+    for _, v in ipairs(ReplicatedStorage:GetDescendants()) do
+        if v:IsA("RemoteEvent") and (string.lower(v.Name):find("ninja") or string.lower(v.Name):find("sword") or string.lower(v.Name):find("swing")) then
+            return v
+        end
+    end
+    return nil
+end
+
+-- Thread สำหรับ Auto Farm ดาบอัตโนมัติ (แก้ไขให้ยิงรีโมทได้อย่างแม่นยำ)
 task.spawn(function()
     while true do
         if States.AutoFarm then
             pcall(function()
-                LocalPlayer.ninjaEvent:FireServer()
+                local remote = GetNinjaRemote()
+                if remote then
+                    remote:FireServer()
+                end
             end)
         end
-        task.wait(0.01)
+        task.wait(0.02)
     end
 end)
 
@@ -439,7 +460,7 @@ CreateToggleCard("Boost FPS", "Optimizes rendering performance (Fake 1000 FPS)",
     end
 end)
 
--- 2. Auto Sword Farm Toggle (ใช้ ninjaEvent:FireServer แบบวนลูป)
+-- 2. Auto Sword Farm Toggle
 CreateToggleCard("Auto Sword Farm", "Automatically fires ninjaEvent for sword training", function(state)
     States.AutoFarm = state
 end)
@@ -664,8 +685,6 @@ local function CreateColorButton(colorName, colorValue)
             end)
         end
         CurrentTheme = colorValue
-        
-        -- เปลี่ยนสีปุ่มลอยเปิด-ปิด UI ตาม Theme ด้วย
         TweenService:Create(OpenButton, twInfo, {TextColor3 = colorValue}):Play()
     end)
 end
@@ -678,7 +697,6 @@ CreateColorButton("Red", THEMES.Red)
 CreateColorButton("Pink", THEMES.Pink)
 CreateColorButton("Black", THEMES.Black)
 
--- ลงทะเบียนปุ่มลอยเปิด-ปิด UI ให้เปลี่ยนสีตามธีม
 RegisterThemeColor(OpenButton, "TextColor3")
 
 -- Default Page open
