@@ -1,5 +1,5 @@
 -- =================================================================
--- ⚡ Executor Panel - Roblox In-Game UI (Exact Specification 100%)
+-- ⚡ Executor Panel - Premium Glassmorphism UI (Roblox In-Game)
 -- =================================================================
 
 local Players = game:GetService("Players")
@@ -7,7 +7,7 @@ local TweenService = game:GetService("TweenService")
 local RunService = game:GetService("RunService")
 local LocalPlayer = Players.LocalPlayer
 
--- Theme Color Definitions
+-- Theme Color Definitions (7 Colors)
 local THEMES = {
     Purple = Color3.fromHex("#8B5CF6"),
     Blue = Color3.fromHex("#3B82F6"),
@@ -21,62 +21,76 @@ local THEMES = {
 local CurrentTheme = THEMES.Purple
 local CurrentThemeName = "Purple"
 
--- States
+-- States & Logic Variables
 local States = {
     BoostFPS = false,
+    AutoFarm = false, -- สถานะสำหรับฟาร์มดาบอัตโนมัติ
     WalkSpeed = 16,
     JumpHeight = 50,
     FakeFPSValue = 60
 }
 
+-- Thread สำหรับ Auto Farm ดาบอัตโนมัติ (ninjaEvent)
+task.spawn(function()
+    while true do
+        if States.AutoFarm then
+            pcall(function()
+                LocalPlayer.ninjaEvent:FireServer()
+            end)
+        end
+        task.wait(0.01)
+    end
+end)
+
 -- =================================================================
 -- 1. ScreenGui Setup
 -- =================================================================
 local ScreenGui = Instance.new("ScreenGui")
-ScreenGui.Name = "ExecutorPanel_Strict"
+ScreenGui.Name = "ExecutorPanel_Premium"
 ScreenGui.ResetOnSpawn = false
 pcall(function() ScreenGui.Parent = game:GetService("CoreGui") end)
 if not ScreenGui.Parent then ScreenGui.Parent = LocalPlayer:WaitForChild("PlayerGui") end
 
 -- =================================================================
--- 2. Main Frame (760x420, Center, Glassmorphism, Animation)
+-- 2. Main Frame (760x420, Center, Glassmorphism, Responsive)
 -- =================================================================
 local MainFrame = Instance.new("Frame")
 MainFrame.Name = "MainFrame"
 MainFrame.Size = UDim2.new(0, 760, 0, 420)
 MainFrame.Position = UDim2.new(0.5, -380, 0.5, -210)
 MainFrame.BackgroundColor3 = Color3.fromHex("#0F0F13")
-MainFrame.BackgroundTransparency = 0.15
+MainFrame.BackgroundTransparency = 0.2
 MainFrame.BorderSizePixel = 0
 MainFrame.ClipsDescendants = true
 MainFrame.Parent = ScreenGui
 
--- Opening Animation (Scale 90% -> 100%, Transparency 1 -> 0.15, Back.Out, 0.35s)
-MainFrame.Size = UDim2.new(0, 760 * 0.9, 0, 420 * 0.9)
-MainFrame.BackgroundTransparency = 1
-
-TweenService:Create(MainFrame, TweenInfo.new(0.35, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
-    Size = UDim2.new(0, 760, 0, 420),
-    BackgroundTransparency = 0.15
-}):Play()
-
+-- UI Drop Shadow & Corner & Stroke
 local MainCorner = Instance.new("UICorner")
 MainCorner.CornerRadius = UDim.new(0, 12)
 MainCorner.Parent = MainFrame
 
 local MainStroke = Instance.new("UIStroke")
-MainStroke.Thickness = 1
+MainStroke.Thickness = 1.2
 MainStroke.Color = Color3.fromRGB(255, 255, 255)
-MainStroke.Transparency = 0.85
+MainStroke.Transparency = 0.8
 MainStroke.Parent = MainFrame
 
+-- เปิด UI Animation (Scale 90% -> 100%, Fade In)
+MainFrame.Size = UDim2.new(0, 760 * 0.9, 0, 420 * 0.9)
+MainFrame.BackgroundTransparency = 1
+
+TweenService:Create(MainFrame, TweenInfo.new(0.35, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
+    Size = UDim2.new(0, 760, 0, 420),
+    BackgroundTransparency = 0.2
+}):Play()
+
 -- =================================================================
--- 3. Header (45px Height)
+-- 3. Header (45px Height, Minimize, Close Buttons)
 -- =================================================================
 local Header = Instance.new("Frame")
 Header.Size = UDim2.new(1, 0, 0, 45)
 Header.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
-Header.BackgroundTransparency = 0.5
+Header.BackgroundTransparency = 0.4
 Header.BorderSizePixel = 0
 Header.Parent = MainFrame
 
@@ -93,7 +107,7 @@ HeaderTitle.Parent = Header
 
 local StatusLabel = Instance.new("TextLabel")
 StatusLabel.Size = UDim2.new(0, 150, 1, 0)
-StatusLabel.Position = UDim2.new(1, -190, 0, 0)
+StatusLabel.Position = UDim2.new(1, -220, 0, 0)
 StatusLabel.BackgroundTransparency = 1
 StatusLabel.Text = "🟢 Connected"
 StatusLabel.TextColor3 = Color3.fromRGB(34, 197, 94)
@@ -102,6 +116,7 @@ StatusLabel.TextSize = 12
 StatusLabel.TextXAlignment = Enum.TextXAlignment.Right
 StatusLabel.Parent = Header
 
+-- Close Button (X)
 local CloseButton = Instance.new("TextButton")
 CloseButton.Size = UDim2.new(0, 30, 0, 30)
 CloseButton.Position = UDim2.new(1, -38, 0.5, -15)
@@ -113,17 +128,37 @@ CloseButton.Font = Enum.Font.GothamBold
 CloseButton.TextSize = 14
 CloseButton.Parent = Header
 
+-- Minimize Button (-)
+local MinimizeButton = Instance.new("TextButton")
+MinimizeButton.Size = UDim2.new(0, 30, 0, 30)
+MinimizeButton.Position = UDim2.new(1, -74, 0.5, -15)
+MinimizeButton.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+MinimizeButton.BackgroundTransparency = 1
+MinimizeButton.Text = "─"
+MinimizeButton.TextColor3 = Color3.fromRGB(180, 180, 180)
+MinimizeButton.Font = Enum.Font.GothamBold
+MinimizeButton.TextSize = 14
+MinimizeButton.Parent = Header
+
+-- Hover & Click Effects for Window Controls
 CloseButton.MouseEnter:Connect(function()
     TweenService:Create(CloseButton, TweenInfo.new(0.2), {TextColor3 = Color3.fromRGB(239, 68, 68)}):Play()
 end)
-
 CloseButton.MouseLeave:Connect(function()
     TweenService:Create(CloseButton, TweenInfo.new(0.2), {TextColor3 = Color3.fromRGB(180, 180, 180)}):Play()
 end)
 
+MinimizeButton.MouseEnter:Connect(function()
+    TweenService:Create(MinimizeButton, TweenInfo.new(0.2), {TextColor3 = Color3.fromRGB(255, 255, 255)}):Play()
+end)
+MinimizeButton.MouseLeave:Connect(function()
+    TweenService:Create(MinimizeButton, TweenInfo.new(0.2), {TextColor3 = Color3.fromRGB(180, 180, 180)}):Play()
+end)
+
+-- Close Function with Animation
 CloseButton.MouseButton1Click:Connect(function()
-    local tw = TweenService:Create(MainFrame, TweenInfo.new(0.25), {
-        Size = UDim2.new(0, 760 * 0.95, 0, 420 * 0.95),
+    local tw = TweenService:Create(MainFrame, TweenInfo.new(0.25, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+        Size = UDim2.new(0, 760 * 0.9, 0, 420 * 0.9),
         BackgroundTransparency = 1
     })
     tw:Play()
@@ -132,14 +167,24 @@ CloseButton.MouseButton1Click:Connect(function()
     end)
 end)
 
+-- Minimize / Maximize Function
+local isMinimized = false
+MinimizeButton.MouseButton1Click:Connect(function()
+    isMinimized = not isMinimized
+    local targetSize = isMinimized and UDim2.new(0, 760, 0, 45) or UDim2.new(0, 760, 0, 420)
+    TweenService:Create(MainFrame, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+        Size = targetSize
+    }):Play()
+end)
+
 -- =================================================================
--- 4. Sidebar (3 Menu items exactly: Home, Player, Settings)
+-- 4. Sidebar & Navigation (Home, Player, Settings)
 -- =================================================================
 local Sidebar = Instance.new("Frame")
 Sidebar.Size = UDim2.new(0, 180, 1, -45)
 Sidebar.Position = UDim2.new(0, 0, 0, 45)
 Sidebar.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
-Sidebar.BackgroundTransparency = 0.3
+Sidebar.BackgroundTransparency = 0.25
 Sidebar.BorderSizePixel = 0
 Sidebar.Parent = MainFrame
 
@@ -157,15 +202,6 @@ local ThemeElements = {}
 
 local function RegisterThemeColor(obj, property)
     table.insert(ThemeElements, {Object = obj, Prop = property})
-end
-
-local function UpdateAllThemeColors(newColor)
-    CurrentTheme = newColor
-    for _, item in ipairs(ThemeElements) do
-        pcall(function()
-            item.Object[item.Prop] = newColor
-        end)
-    end
 end
 
 local function SwitchPage(pageName)
@@ -209,9 +245,11 @@ local function CreateNavButton(name, displayName, yPos)
     
     Btn.MouseEnter:Connect(function()
         TweenService:Create(Btn, TweenInfo.new(0.2), {Size = UDim2.new(1, -12, 0, 42), Position = UDim2.new(0, 10, 0, yPos)}):Play()
+        TweenService:Create(Btn, TweenInfo.new(0.2), {TextColor3 = Color3.fromRGB(255, 255, 255)}):Play()
     end)
     Btn.MouseLeave:Connect(function()
         TweenService:Create(Btn, TweenInfo.new(0.2), {Size = UDim2.new(1, -16, 0, 42), Position = UDim2.new(0, 8, 0, yPos)}):Play()
+        TweenService:Create(Btn, TweenInfo.new(0.2), {TextColor3 = Color3.fromRGB(200, 200, 200)}):Play()
     end)
     
     Btn.MouseButton1Click:Connect(function()
@@ -226,19 +264,21 @@ local function CreatePage(name)
     Page.Size = UDim2.new(1, 0, 1, 0)
     Page.BackgroundTransparency = 1
     Page.BorderSizePixel = 0
-    Page.ScrollBarThickness = 0
+    Page.ScrollBarThickness = 2
+    Page.ScrollBarImageColor3 = Color3.fromRGB(100, 100, 100)
     Page.Visible = false
     Page.Parent = ContentContainer
     
     local Layout = Instance.new("UIListLayout")
     Layout.SortOrder = Enum.SortOrder.LayoutOrder
-    Layout.Padding = UDim.new(0, 16)
+    Layout.Padding = UDim.new(0, 14)
     Layout.Parent = Page
     
     local Padding = Instance.new("UIPadding")
-    Padding.PaddingTop = UDim.new(0, 25)
-    Padding.PaddingLeft = UDim.new(0, 25)
-    Padding.PaddingRight = UDim.new(0, 25)
+    Padding.PaddingTop = UDim.new(0, 20)
+    Padding.PaddingLeft = UDim.new(0, 20)
+    Padding.PaddingRight = UDim.new(0, 20)
+    Padding.PaddingBottom = UDim.new(0, 20)
     Padding.Parent = Page
     
     Pages[name] = Page
@@ -250,160 +290,205 @@ CreateNavButton("Player", "👤 Player", 65)
 CreateNavButton("Settings", "⚙️ Settings", 115)
 
 -- =================================================================
--- 5. Page: Home
+-- 5. Page: Home (Boost FPS & Auto Sword Farm)
 -- =================================================================
 local HomePage = CreatePage("Home")
 
 local HomeTitle = Instance.new("TextLabel")
-HomeTitle.Size = UDim2.new(1, 0, 0, 30)
+HomeTitle.Size = UDim2.new(1, 0, 0, 25)
 HomeTitle.BackgroundTransparency = 1
-HomeTitle.Text = "Boost FPS"
+HomeTitle.Text = "Dashboard & Automation"
 HomeTitle.TextColor3 = Color3.fromRGB(255, 255, 255)
 HomeTitle.Font = Enum.Font.GothamBold
-HomeTitle.TextSize = 20
+HomeTitle.TextSize = 18
 HomeTitle.TextXAlignment = Enum.TextXAlignment.Left
 HomeTitle.Parent = HomePage
 
--- Toggle Card
-local ToggleCard = Instance.new("Frame")
-ToggleCard.Size = UDim2.new(1, 0, 0, 60)
-ToggleCard.BackgroundColor3 = Color3.fromRGB(25, 25, 30)
-ToggleCard.BackgroundTransparency = 0.5
-ToggleCard.Parent = HomePage
-Instance.new("UICorner", ToggleCard).CornerRadius = UDim.new(0, 8)
+-- ฟังก์ชันสร้าง Toggle Card แบบพรีเมียม
+local function CreateToggleCard(titleText, descText, callback)
+    local Card = Instance.new("Frame")
+    Card.Size = UDim2.new(1, 0, 0, 58)
+    Card.BackgroundColor3 = Color3.fromRGB(20, 20, 25)
+    Card.BackgroundTransparency = 0.4
+    Card.Parent = HomePage
+    Instance.new("UICorner", Card).CornerRadius = UDim.new(0, 8)
+    
+    local CardStroke = Instance.new("UIStroke")
+    CardStroke.Color = Color3.fromRGB(255, 255, 255)
+    CardStroke.Transparency = 0.9
+    CardStroke.Parent = Card
 
-local ToggleLabel = Instance.new("TextLabel")
-ToggleLabel.Size = UDim2.new(0, 200, 1, 0)
-ToggleLabel.Position = UDim2.new(0, 15, 0, 0)
-ToggleLabel.BackgroundTransparency = 1
-ToggleLabel.Text = "Boost FPS Mode"
-ToggleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
-ToggleLabel.Font = Enum.Font.GothamBold
-ToggleLabel.TextSize = 14
-ToggleLabel.TextXAlignment = Enum.TextXAlignment.Left
-ToggleLabel.Parent = ToggleCard
+    local LabelFrame = Instance.new("Frame")
+    LabelFrame.Size = UDim2.new(1, -70, 1, 0)
+    LabelFrame.Position = UDim2.new(0, 15, 0, 0)
+    LabelFrame.BackgroundTransparency = 1
+    LabelFrame.Parent = Card
 
-local ToggleBg = Instance.new("TextButton")
-ToggleBg.Size = UDim2.new(0, 48, 0, 26)
-ToggleBg.Position = UDim2.new(1, -64, 0.5, -13)
-ToggleBg.BackgroundColor3 = Color3.fromRGB(50, 50, 60)
-ToggleBg.Text = ""
-ToggleBg.Parent = ToggleCard
-Instance.new("UICorner", ToggleBg).CornerRadius = UDim.new(1, 0)
+    local Title = Instance.new("TextLabel")
+    Title.Size = UDim2.new(1, 0, 0, 20)
+    Title.Position = UDim2.new(0, 0, 0, 10)
+    Title.BackgroundTransparency = 1
+    Title.Text = titleText
+    Title.TextColor3 = Color3.fromRGB(255, 255, 255)
+    Title.Font = Enum.Font.GothamBold
+    Title.TextSize = 13
+    Title.TextXAlignment = Enum.TextXAlignment.Left
+    Title.Parent = LabelFrame
 
-local ToggleCircle = Instance.new("Frame")
-ToggleCircle.Size = UDim2.new(0, 20, 0, 20)
-ToggleCircle.Position = UDim2.new(0, 3, 0.5, -10)
-ToggleCircle.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-ToggleCircle.Parent = ToggleBg
-Instance.new("UICorner", ToggleCircle).CornerRadius = UDim.new(1, 0)
+    local Desc = Instance.new("TextLabel")
+    Desc.Size = UDim2.new(1, 0, 0, 16)
+    Desc.Position = UDim2.new(0, 0, 0, 30)
+    Desc.BackgroundTransparency = 1
+    Desc.Text = descText
+    Desc.TextColor3 = Color3.fromRGB(160, 160, 160)
+    Desc.Font = Enum.Font.GothamMedium
+    Desc.TextSize = 11
+    Desc.TextXAlignment = Enum.TextXAlignment.Left
+    Desc.Parent = LabelFrame
 
--- Stats Panel (Fake FPS & CPU / Memory)
+    local ToggleBg = Instance.new("TextButton")
+    ToggleBg.Size = UDim2.new(0, 44, 0, 24)
+    ToggleBg.Position = UDim2.new(1, -54, 0.5, -12)
+    ToggleBg.BackgroundColor3 = Color3.fromRGB(45, 45, 55)
+    ToggleBg.Text = ""
+    ToggleBg.Parent = Card
+    Instance.new("UICorner", ToggleBg).CornerRadius = UDim.new(1, 0)
+
+    local ToggleCircle = Instance.new("Frame")
+    ToggleCircle.Size = UDim2.new(0, 18, 0, 18)
+    ToggleCircle.Position = UDim2.new(0, 3, 0.5, -9)
+    ToggleCircle.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+    ToggleCircle.Parent = ToggleBg
+    Instance.new("UICorner", ToggleCircle).CornerRadius = UDim.new(1, 0)
+
+    local toggled = false
+    ToggleBg.MouseButton1Click:Connect(function()
+        toggled = not toggled
+        local goalPos = toggled and UDim2.new(1, -21, 0.5, -9) or UDim2.new(0, 3, 0.5, -9)
+        local goalColor = toggled and CurrentTheme or Color3.fromRGB(45, 45, 55)
+        
+        TweenService:Create(ToggleCircle, TweenInfo.new(0.2), {Position = goalPos}):Play()
+        TweenService:Create(ToggleBg, TweenInfo.new(0.2), {BackgroundColor3 = goalColor}):Play()
+        
+        callback(toggled)
+    end)
+
+    RegisterThemeColor(ToggleBg, "BackgroundColor3")
+    return ToggleBg, function(val)
+        toggled = val
+        local goalPos = toggled and UDim2.new(1, -21, 0.5, -9) or UDim2.new(0, 3, 0.5, -9)
+        local goalColor = toggled and CurrentTheme or Color3.fromRGB(45, 45, 55)
+        TweenService:Create(ToggleCircle, TweenInfo.new(0.2), {Position = goalPos}):Play()
+        TweenService:Create(ToggleBg, TweenInfo.new(0.2), {BackgroundColor3 = goalColor}):Play()
+    end
+end
+
+-- 1. Boost FPS Toggle
+CreateToggleCard("Boost FPS", "Optimizes rendering performance (Fake 1000 FPS)", function(state)
+    States.BoostFPS = state
+    if state then
+        local valObj = Instance.new("NumberValue")
+        valObj.Value = States.FakeFPSValue
+        valObj.Changed:Connect(function(v)
+            States.FakeFPSValue = math.floor(v)
+            if _G.UpdateFpsLabel then _G.UpdateFpsLabel(States.FakeFPSValue) end
+        end)
+        TweenService:Create(valObj, TweenInfo.new(0.8, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {Value = 1000}):Play()
+        task.delay(0.8, function() valObj:Destroy() end)
+    else
+        States.FakeFPSValue = 60
+        if _G.UpdateFpsLabel then _G.UpdateFpsLabel(60) end
+    end
+end)
+
+-- 2. Auto Sword Farm Toggle (ninjaEvent) ตามคำขอ
+CreateToggleCard("Auto Sword Farm", "Automatically fires ninjaEvent for sword training", function(state)
+    States.AutoFarm = state
+end)
+
+-- Stats Card (FPS & Hardware Monitor)
 local StatsCard = Instance.new("Frame")
-StatsCard.Size = UDim2.new(1, 0, 0, 95)
-StatsCard.BackgroundColor3 = Color3.fromRGB(25, 25, 30)
-StatsCard.BackgroundTransparency = 0.5
+StatsCard.Size = UDim2.new(1, 0, 0, 85)
+StatsCard.BackgroundColor3 = Color3.fromRGB(20, 20, 25)
+StatsCard.BackgroundTransparency = 0.4
 StatsCard.Parent = HomePage
 Instance.new("UICorner", StatsCard).CornerRadius = UDim.new(0, 8)
 
 local FpsDisplay = Instance.new("TextLabel")
-FpsDisplay.Size = UDim2.new(1, -20, 0, 30)
+FpsDisplay.Size = UDim2.new(1, -30, 0, 25)
 FpsDisplay.Position = UDim2.new(0, 15, 0, 12)
 FpsDisplay.BackgroundTransparency = 1
 FpsDisplay.Text = "Fake FPS : 60 FPS"
 FpsDisplay.TextColor3 = Color3.fromRGB(255, 255, 255)
 FpsDisplay.Font = Enum.Font.GothamBold
-FpsDisplay.TextSize = 14
+FpsDisplay.TextSize = 13
 FpsDisplay.TextXAlignment = Enum.TextXAlignment.Left
 FpsDisplay.Parent = StatsCard
 
+_G.UpdateFpsLabel = function(val)
+    FpsDisplay.Text = "Fake FPS : " .. val .. " FPS"
+end
+
 local CpuDisplay = Instance.new("TextLabel")
-CpuDisplay.Size = UDim2.new(1, -20, 0, 20)
-CpuDisplay.Position = UDim2.new(0, 15, 0, 44)
+CpuDisplay.Size = UDim2.new(1, -30, 0, 20)
+CpuDisplay.Position = UDim2.new(0, 15, 0, 38)
 CpuDisplay.BackgroundTransparency = 1
 CpuDisplay.Text = "CPU Usage : 8%"
-CpuDisplay.TextColor3 = Color3.fromRGB(180, 180, 180)
+CpuDisplay.TextColor3 = Color3.fromRGB(160, 160, 160)
 CpuDisplay.Font = Enum.Font.GothamMedium
-CpuDisplay.TextSize = 12
+CpuDisplay.TextSize = 11
 CpuDisplay.TextXAlignment = Enum.TextXAlignment.Left
 CpuDisplay.Parent = StatsCard
 
 local MemDisplay = Instance.new("TextLabel")
-MemDisplay.Size = UDim2.new(1, -20, 0, 20)
-MemDisplay.Position = UDim2.new(0, 15, 0, 66)
+MemDisplay.Size = UDim2.new(1, -30, 0, 20)
+MemDisplay.Position = UDim2.new(0, 15, 0, 58)
 MemDisplay.BackgroundTransparency = 1
 MemDisplay.Text = "Memory : 126 MB"
-MemDisplay.TextColor3 = Color3.fromRGB(180, 180, 180)
+MemDisplay.TextColor3 = Color3.fromRGB(160, 160, 160)
 MemDisplay.Font = Enum.Font.GothamMedium
-MemDisplay.TextSize = 12
+MemDisplay.TextSize = 11
 MemDisplay.TextXAlignment = Enum.TextXAlignment.Left
 MemDisplay.Parent = StatsCard
 
--- Toggle Click Event
-ToggleBg.MouseButton1Click:Connect(function()
-    States.BoostFPS = not States.BoostFPS
-    local goalCirclePos = States.BoostFPS and UDim2.new(1, -23, 0.5, -10) or UDim2.new(0, 3, 0.5, -10)
-    local goalBgColor = States.BoostFPS and CurrentTheme or Color3.fromRGB(50, 50, 60)
-    
-    TweenService:Create(ToggleCircle, TweenInfo.new(0.2), {Position = goalCirclePos}):Play()
-    TweenService:Create(ToggleBg, TweenInfo.new(0.2), {BackgroundColor3 = goalBgColor}):Play()
-    
-    if States.BoostFPS then
-        local tweenInfo = TweenInfo.new(0.8, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
-        local valObj = Instance.new("NumberValue")
-        valObj.Value = States.FakeFPSValue
-        valObj.Changed:Connect(function(v)
-            States.FakeFPSValue = math.floor(v)
-            FpsDisplay.Text = "Fake FPS : " .. States.FakeFPSValue .. " FPS"
-        end)
-        TweenService:Create(valObj, tweenInfo, {Value = 1000}):Play()
-        task.delay(0.8, function() valObj:Destroy() end)
-    else
-        States.FakeFPSValue = 60
-        FpsDisplay.Text = "Fake FPS : 60 FPS"
-    end
-end)
-
-RegisterThemeColor(ToggleBg, "BackgroundColor3")
-
 -- =================================================================
--- 6. Page: Player
+-- 6. Page: Player (WalkSpeed & JumpHeight Sliders)
 -- =================================================================
 local PlayerPage = CreatePage("Player")
 
 local PlayerTitle = Instance.new("TextLabel")
-PlayerTitle.Size = UDim2.new(1, 0, 0, 30)
+PlayerTitle.Size = UDim2.new(1, 0, 0, 25)
 PlayerTitle.BackgroundTransparency = 1
 PlayerTitle.Text = "Player Attributes"
 PlayerTitle.TextColor3 = Color3.fromRGB(255, 255, 255)
 PlayerTitle.Font = Enum.Font.GothamBold
-PlayerTitle.TextSize = 20
+PlayerTitle.TextSize = 18
 PlayerTitle.TextXAlignment = Enum.TextXAlignment.Left
 PlayerTitle.Parent = PlayerPage
 
 local function CreateSlider(title, minVal, maxVal, defaultVal, callback)
     local Card = Instance.new("Frame")
-    Card.Size = UDim2.new(1, 0, 0, 75)
-    Card.BackgroundColor3 = Color3.fromRGB(25, 25, 30)
-    Card.BackgroundTransparency = 0.5
+    Card.Size = UDim2.new(1, 0, 0, 70)
+    Card.BackgroundColor3 = Color3.fromRGB(20, 20, 25)
+    Card.BackgroundTransparency = 0.4
     Card.Parent = PlayerPage
     Instance.new("UICorner", Card).CornerRadius = UDim.new(0, 8)
     
     local Label = Instance.new("TextLabel")
-    Label.Size = UDim2.new(1, -30, 0, 25)
+    Label.Size = UDim2.new(1, -30, 0, 22)
     Label.Position = UDim2.new(0, 15, 0, 10)
     Label.BackgroundTransparency = 1
     Label.Text = title .. " : " .. defaultVal
     Label.TextColor3 = Color3.fromRGB(255, 255, 255)
     Label.Font = Enum.Font.GothamBold
-    Label.TextSize = 13
+    Label.TextSize = 12
     Label.TextXAlignment = Enum.TextXAlignment.Left
     Label.Parent = Card
     
     local BarBg = Instance.new("Frame")
     BarBg.Size = UDim2.new(1, -30, 0, 6)
-    BarBg.Position = UDim2.new(0, 15, 0, 48)
-    BarBg.BackgroundColor3 = Color3.fromRGB(50, 50, 60)
+    BarBg.Position = UDim2.new(0, 15, 0, 44)
+    BarBg.BackgroundColor3 = Color3.fromRGB(45, 45, 55)
     BarBg.BorderSizePixel = 0
     BarBg.Parent = Card
     Instance.new("UICorner", BarBg).CornerRadius = UDim.new(1, 0)
@@ -416,23 +501,23 @@ local function CreateSlider(title, minVal, maxVal, defaultVal, callback)
     Instance.new("UICorner", BarFill).CornerRadius = UDim.new(1, 0)
     RegisterThemeColor(BarFill, "BackgroundColor3")
     
-    local Knob = Instance.new("TextButton")
-    Knob.Size = UDim2.new(0, 16, 0, 16)
+    local Knob = Instance.new("Frame")
+    Knob.Size = UDim2.new(0, 14, 0, 14)
     Knob.AnchorPoint = Vector2.new(0.5, 0.5)
     Knob.Position = UDim2.new((defaultVal - minVal)/(maxVal - minVal), 0, 0.5, 0)
     Knob.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-    Knob.Text = ""
     Knob.Parent = BarBg
     Instance.new("UICorner", Knob).CornerRadius = UDim.new(1, 0)
     
     local dragging = false
     local UserInputService = game:GetService("UserInputService")
     
-    Knob.MouseButton1Down:Connect(function() dragging = true end)
+    Knob.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 then dragging = true end
+    end)
     BarBg.InputBegan:Connect(function(input)
         if input.UserInputType == Enum.UserInputType.MouseButton1 then dragging = true end
     end)
-    
     UserInputService.InputEnded:Connect(function(input)
         if input.UserInputType == Enum.UserInputType.MouseButton1 then dragging = false end
     end)
@@ -473,19 +558,19 @@ end)
 local SettingsPage = CreatePage("Settings")
 
 local SettingsTitle = Instance.new("TextLabel")
-SettingsTitle.Size = UDim2.new(1, 0, 0, 30)
+SettingsTitle.Size = UDim2.new(1, 0, 0, 25)
 SettingsTitle.BackgroundTransparency = 1
 SettingsTitle.Text = "Theme Customization"
 SettingsTitle.TextColor3 = Color3.fromRGB(255, 255, 255)
 SettingsTitle.Font = Enum.Font.GothamBold
-SettingsTitle.TextSize = 20
+SettingsTitle.TextSize = 18
 SettingsTitle.TextXAlignment = Enum.TextXAlignment.Left
 SettingsTitle.Parent = SettingsPage
 
 local ThemeCard = Instance.new("Frame")
-ThemeCard.Size = UDim2.new(1, 0, 0, 90)
-ThemeCard.BackgroundColor3 = Color3.fromRGB(25, 25, 30)
-ThemeCard.BackgroundTransparency = 0.5
+ThemeCard.Size = UDim2.new(1, 0, 0, 95)
+ThemeCard.BackgroundColor3 = Color3.fromRGB(20, 20, 25)
+ThemeCard.BackgroundTransparency = 0.4
 ThemeCard.Parent = SettingsPage
 Instance.new("UICorner", ThemeCard).CornerRadius = UDim.new(0, 8)
 
@@ -494,21 +579,21 @@ ThemeDesc.Size = UDim2.new(1, -30, 0, 20)
 ThemeDesc.Position = UDim2.new(0, 15, 0, 12)
 ThemeDesc.BackgroundTransparency = 1
 ThemeDesc.Text = "Select Theme Color (7 Colors Available)"
-ThemeDesc.TextColor3 = Color3.fromRGB(200, 200, 200)
+ThemeDesc.TextColor3 = Color3.fromRGB(180, 180, 180)
 ThemeDesc.Font = Enum.Font.GothamMedium
-ThemeDesc.TextSize = 13
+ThemeDesc.TextSize = 12
 ThemeDesc.TextXAlignment = Enum.TextXAlignment.Left
 ThemeDesc.Parent = ThemeCard
 
 local ColorContainer = Instance.new("Frame")
-ColorContainer.Size = UDim2.new(1, -30, 0, 36)
+ColorContainer.Size = UDim2.new(1, -30, 0, 38)
 ColorContainer.Position = UDim2.new(0, 15, 0, 42)
 ColorContainer.BackgroundTransparency = 1
 ColorContainer.Parent = ThemeCard
 
 local ColorLayout = Instance.new("UIListLayout")
 ColorLayout.FillDirection = Enum.FillDirection.Horizontal
-ColorLayout.Padding = UDim.new(0, 12)
+ColorLayout.Padding = UDim.new(0, 10)
 ColorLayout.Parent = ColorContainer
 
 local function CreateColorButton(colorName, colorValue)
@@ -533,7 +618,7 @@ local function CreateColorButton(colorName, colorValue)
             end
         end
         
-        -- Theme transition fade animation (0.25s)
+        -- Theme Fade Transition (0.25s)
         local twInfo = TweenInfo.new(0.25, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
         for _, item in ipairs(ThemeElements) do
             pcall(function()
