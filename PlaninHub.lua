@@ -1,5 +1,5 @@
 -- =================================================================
--- ⚡ Executor Panel - Ultimate Version (Roblox In-Game UI)
+-- ⚡ Executor Panel - Ultimate Version (High-Performance Auto Farm)
 -- =================================================================
 
 local Players = game:GetService("Players")
@@ -31,35 +31,23 @@ local States = {
     FakeFPSValue = 60
 }
 
--- ฟังก์ชันค้นหา Remote Event ของเกม (รองรับทั้งใน Player และ ReplicatedStorage)
-local function GetNinjaRemote()
-    if LocalPlayer:FindFirstChild("ninjaEvent") then
-        return LocalPlayer.ninjaEvent
-    end
-    if ReplicatedStorage:FindFirstChild("ninjaEvent") then
-        return ReplicatedStorage.ninjaEvent
-    end
-    -- ค้นหาสำรองเผื่อเจอรีโมทที่เกี่ยวข้องกับการฟาร์มดาบ
-    for _, v in ipairs(ReplicatedStorage:GetDescendants()) do
-        if v:IsA("RemoteEvent") and (string.lower(v.Name):find("ninja") or string.lower(v.Name):find("sword") or string.lower(v.Name):find("swing")) then
-            return v
-        end
-    end
-    return nil
-end
-
--- Thread สำหรับ Auto Farm ดาบอัตโนมัติ (แก้ไขให้ยิงรีโมทได้อย่างแม่นยำ)
+-- ระบบ Auto Farm ดาบอัตโนมัติ (Turbo Fire & Remote Finder ตามสเปกที่ใช้งานได้จริง)
 task.spawn(function()
     while true do
         if States.AutoFarm then
             pcall(function()
-                local remote = GetNinjaRemote()
-                if remote then
-                    remote:FireServer()
+                local character = LocalPlayer.Character
+                local ninjaEvent = LocalPlayer:FindFirstChild("ninjaEvent") or (character and character:FindFirstChild("ninjaEvent")) or ReplicatedStorage:FindFirstChild("ninjaEvent")
+                
+                if ninjaEvent then
+                    -- ย้ำส่งสัญญาณรัวๆ เพื่อความลื่นไหลในการฟาร์ม
+                    ninjaEvent:FireServer("swingKatana")
+                    ninjaEvent:FireServer("swingKatana")
+                    ninjaEvent:FireServer("swingKatana")
                 end
             end)
         end
-        task.wait(0.02)
+        task.wait(0.001)
     end
 end)
 
@@ -460,7 +448,7 @@ CreateToggleCard("Boost FPS", "Optimizes rendering performance (Fake 1000 FPS)",
     end
 end)
 
--- 2. Auto Sword Farm Toggle
+-- 2. Auto Sword Farm Toggle (ใช้ระบบ Turbo Fire ที่สมบูรณ์แบบ)
 CreateToggleCard("Auto Sword Farm", "Automatically fires ninjaEvent for sword training", function(state)
     States.AutoFarm = state
 end)
