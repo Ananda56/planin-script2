@@ -1,29 +1,42 @@
 -- =================================================================
--- 🐟 PlaninHub - Speed, Fly, Invisible & Money Spawner
--- UI Library: Rayfield (Modern Dark Theme)
+-- 🐟 PlaninHub - FIXED VERSION (Safe Mode)
 -- =================================================================
 
-local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
+local success, Rayfield = pcall(function()
+    return loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
+end)
+
+if not success then
+    warn("ไม่สามารถโหลด Rayfield UI ได้ โปรดตรวจสอบอินเทอร์เน็ตหรือตัวรันของคุณ")
+    return
+end
+
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local LocalPlayer = Players.LocalPlayer
 
--- ตัวแปรควบคุมระบบ
 local States = {
     WalkSpeedEnabled = false,
     WalkSpeed = 16,
     FlyEnabled = false,
     FlySpeed = 50,
     Invisible = false,
-    SpawnAmount = 1 -- จำนวนเงินที่จะเสก (ค่าเริ่มต้น)
+    SpawnAmount = 1
 }
 
 -- =================================================================
--- 1. สร้างปุ่มลอยสำหรับ เปิด/ปิด UI
+-- 1. สร้างปุ่มลอยเปิด/ปิดแบบปลอดภัย (ป้องกัน CoreGui Error)
 -- =================================================================
 local ScreenGui = Instance.new("ScreenGui")
-ScreenGui.Name = "PlaninHubToggle"
-ScreenGui.Parent = game:GetService("CoreGui") or LocalPlayer:WaitForChild("PlayerGui")
+ScreenGui.Name = "PlaninHubToggleSafe"
+
+-- ใช้ pcall เพื่อป้องกัน Error หากตัวรันไม่มีสิทธิ์เข้าถึง CoreGui
+local guiSuccess, _ = pcall(function()
+    ScreenGui.Parent = game:GetService("CoreGui")
+end)
+if not guiSuccess then
+    ScreenGui.Parent = LocalPlayer:WaitForChild("PlayerGui")
+end
 
 local ToggleUIBtn = Instance.new("TextButton")
 ToggleUIBtn.Size = UDim2.new(0, 120, 0, 40)
@@ -44,41 +57,37 @@ UIStroke.Color = Color3.fromRGB(150, 100, 255)
 UIStroke.Thickness = 2
 UIStroke.Parent = ToggleUIBtn
 
-local UIVisible = true
 ToggleUIBtn.MouseButton1Click:Connect(function()
-    UIVisible = not UIVisible
     game:GetService("VirtualInputManager"):SendKeyEvent(true, Enum.KeyCode.RightControl, false, game)
     game:GetService("VirtualInputManager"):SendKeyEvent(false, Enum.KeyCode.RightControl, false, game)
 end)
 
 -- =================================================================
--- 2. สร้างหน้าต่างหลัก (Main Window)
+-- 2. สร้างหน้าต่างหลัก
 -- =================================================================
 local Window = Rayfield:CreateWindow({
     Name = "PlaninHub",
-    LoadingTitle = "กำลังโหลดสคริปต์...",
+    LoadingTitle = "กำลังโหลด PlaninHub...",
     LoadingSubtitle = "ความเร็ว, บิน, ล่องหน, ฟาร์มเงิน",
     ConfigurationSaving = { Enabled = false },
-    Discord = { Enabled = false },
     KeySystem = false
 })
 
--- สร้างแถบเมนู (Tabs)
-local MoneyTab = Window:CreateTab("ฟาร์มเงิน", "bank")
-local MainTab = Window:CreateTab("เมนูหลัก", "home")
-local PlayerTab = Window:CreateTab("ตัวละคร", "user")
+-- ลบ Icon แบบ String ออก เพื่อป้องกันหน้าต่างบัคว่างเปล่า
+local MoneyTab = Window:CreateTab("ฟาร์มเงิน")
+local MainTab = Window:CreateTab("เมนูหลัก")
+local PlayerTab = Window:CreateTab("ตัวละคร")
 
 -- =================================================================
--- 3. ระบบเสกเงินตามจำนวนที่พิมพ์ (ระบบใหม่ของคุณ)
+-- 3. ระบบเสกเงิน
 -- =================================================================
-MoneyTab:CreateSection("เสกเหรียญ / กล่อง (Chi Crate)")
+MoneyTab:CreateSection("เสกเหรียญ / กล่อง")
 
 MoneyTab:CreateInput({
     Name = "ระบุจำนวนที่ต้องการเสก",
-    PlaceholderText = "พิมพ์ตัวเลขที่นี่ (เช่น 100)",
+    PlaceholderText = "พิมพ์ตัวเลข...",
     RemoveTextAfterFocusLost = false,
     Callback = function(Text)
-        -- แปลงข้อความที่พิมพ์เป็นตัวเลข ถ้าพิมพ์ผิดจะตั้งค่าเป็น 1
         States.SpawnAmount = tonumber(Text) or 1
     end,
 })
@@ -86,62 +95,35 @@ MoneyTab:CreateInput({
 MoneyTab:CreateButton({
     Name = "💰 กดเสกเงิน",
     Callback = function()
-        -- ค้นหา ninjaEvent
-        local Event = LocalPlayer:FindFirstChild("ninjaEvent") or (LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("ninjaEvent"))
-        
-        if Event then
-            -- ฟังก์ชัน GetNil ที่ปรับปรุงแล้ว
-            local function GetNil(Name, DebugId)
-                for _, Object in getnilinstances() do
-                    -- หาด้วยชื่ออย่างเดียวเผื่อ DebugId เปลี่ยนแปลงเมื่อย้ายเซิร์ฟเวอร์
-                    if Object.Name == Name then
-                        return Object
+        pcall(function()
+            local Event = LocalPlayer:FindFirstChild("ninjaEvent") or (LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("ninjaEvent"))
+            if Event then
+                local function GetNil(Name)
+                    for _, Object in getnilinstances() do
+                        if Object.Name == Name then return Object end
                     end
-                end
-                return nil
-            end
-            
-            local targetCrate = GetNil("Chi Crate", "1_1368040")
-            
-            if targetCrate then
-                -- วนลูปเสกตามจำนวนที่กรอกไว้
-                for i = 1, States.SpawnAmount do
-                    -- โค้ดดั้งเดิมของคุณ: ใช้ firesignal (Visual Client-Side)
-                    firesignal(Event.OnClientEvent, "collectCoin", targetCrate)
-                    
-                    -- หากต้องการให้เงินเพิ่มจริงๆ ในเซิร์ฟเวอร์ ให้ลองเปลี่ยนบรรทัดด้านบนเป็น:
-                    -- Event:FireServer("collectCoin", targetCrate)
+                    return nil
                 end
                 
-                Rayfield:Notify({
-                    Title = "เสร็จสิ้น!",
-                    Content = "ส่งคำสั่งเสกเงินจำนวน " .. tostring(States.SpawnAmount) .. " ครั้งแล้ว",
-                    Duration = 3,
-                    Image = 4483362458,
-                })
-            else
-                Rayfield:Notify({
-                    Title = "เกิดข้อผิดพลาด",
-                    Content = "ไม่พบ 'Chi Crate' ใน Nil Instances",
-                    Duration = 3,
-                    Image = 4483362458,
-                })
+                local targetCrate = GetNil("Chi Crate")
+                
+                if targetCrate then
+                    for i = 1, States.SpawnAmount do
+                        firesignal(Event.OnClientEvent, "collectCoin", targetCrate)
+                    end
+                    Rayfield:Notify({Title = "สำเร็จ", Content = "เสกเงิน " .. States.SpawnAmount .. " ครั้ง", Duration = 3})
+                else
+                    Rayfield:Notify({Title = "ผิดพลาด", Content = "ไม่พบกล่อง Chi Crate", Duration = 3})
+                end
             end
-        else
-            Rayfield:Notify({
-                Title = "ข้อผิดพลาด",
-                Content = "ไม่พบ ninjaEvent!",
-                Duration = 3,
-                Image = 4483362458,
-            })
-        end
+        end)
     end,
 })
 
 -- =================================================================
--- 4. ระบบวิ่งเร็ว (WalkSpeed)
+-- 4. ระบบวิ่งเร็ว
 -- =================================================================
-MainTab:CreateSection("ตั้งค่าความเร็ว (WalkSpeed)")
+MainTab:CreateSection("ตั้งค่าความเร็ว")
 
 MainTab:CreateToggle({
     Name = "เปิดใช้งาน วิ่งเร็ว",
@@ -165,16 +147,17 @@ MainTab:CreateSlider({
 })
 
 RunService.RenderStepped:Connect(function()
-    if States.WalkSpeedEnabled and LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") then
-        LocalPlayer.Character.Humanoid.WalkSpeed = States.WalkSpeed
-    end
+    pcall(function()
+        if States.WalkSpeedEnabled and LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") then
+            LocalPlayer.Character.Humanoid.WalkSpeed = States.WalkSpeed
+        end
+    end)
 end)
 
 -- =================================================================
--- 5. ระบบบิน (Fly System)
+-- 5. ระบบบิน
 -- =================================================================
-MainTab:CreateSection("ตั้งค่าการบิน (Fly)")
-
+MainTab:CreateSection("ตั้งค่าการบิน")
 local FlyBodyVelocity = nil
 local FlyBodyGyro = nil
 
@@ -184,29 +167,30 @@ MainTab:CreateToggle({
     Flag = "ToggleFly",
     Callback = function(Value)
         States.FlyEnabled = Value
-        local char = LocalPlayer.Character
-        
-        if States.FlyEnabled and char and char:FindFirstChild("HumanoidRootPart") then
-            local hrp = char.HumanoidRootPart
-            FlyBodyVelocity = Instance.new("BodyVelocity")
-            FlyBodyVelocity.MaxForce = Vector3.new(100000, 100000, 100000)
-            FlyBodyVelocity.Velocity = Vector3.zero
-            FlyBodyVelocity.Parent = hrp
-            
-            FlyBodyGyro = Instance.new("BodyGyro")
-            FlyBodyGyro.MaxTorque = Vector3.new(100000, 100000, 100000)
-            FlyBodyGyro.P = 10000
-            FlyBodyGyro.CFrame = hrp.CFrame
-            FlyBodyGyro.Parent = hrp
-            
-            char.Humanoid.PlatformStand = true
-        else
-            if FlyBodyVelocity then FlyBodyVelocity:Destroy() end
-            if FlyBodyGyro then FlyBodyGyro:Destroy() end
-            if char and char:FindFirstChild("Humanoid") then
-                char.Humanoid.PlatformStand = false
+        pcall(function()
+            local char = LocalPlayer.Character
+            if States.FlyEnabled and char and char:FindFirstChild("HumanoidRootPart") then
+                local hrp = char.HumanoidRootPart
+                FlyBodyVelocity = Instance.new("BodyVelocity")
+                FlyBodyVelocity.MaxForce = Vector3.new(100000, 100000, 100000)
+                FlyBodyVelocity.Velocity = Vector3.zero
+                FlyBodyVelocity.Parent = hrp
+                
+                FlyBodyGyro = Instance.new("BodyGyro")
+                FlyBodyGyro.MaxTorque = Vector3.new(100000, 100000, 100000)
+                FlyBodyGyro.P = 10000
+                FlyBodyGyro.CFrame = hrp.CFrame
+                FlyBodyGyro.Parent = hrp
+                
+                char.Humanoid.PlatformStand = true
+            else
+                if FlyBodyVelocity then FlyBodyVelocity:Destroy() end
+                if FlyBodyGyro then FlyBodyGyro:Destroy() end
+                if char and char:FindFirstChild("Humanoid") then
+                    char.Humanoid.PlatformStand = false
+                end
             end
-        end
+        end)
     end,
 })
 
@@ -223,52 +207,51 @@ MainTab:CreateSlider({
 })
 
 RunService.RenderStepped:Connect(function()
-    if States.FlyEnabled and LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
-        local hrp = LocalPlayer.Character.HumanoidRootPart
-        local camera = workspace.CurrentCamera
-        local moveDir = LocalPlayer.Character.Humanoid.MoveDirection
-        
-        if FlyBodyVelocity and FlyBodyGyro then
-            FlyBodyGyro.CFrame = camera.CFrame
-            if moveDir.Magnitude > 0 then
-                FlyBodyVelocity.Velocity = camera.CFrame.LookVector * (moveDir.Z * -States.FlySpeed) 
-                                         + camera.CFrame.RightVector * (moveDir.X * States.FlySpeed)
-            else
-                FlyBodyVelocity.Velocity = Vector3.zero
+    pcall(function()
+        if States.FlyEnabled and LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
+            local hrp = LocalPlayer.Character.HumanoidRootPart
+            local camera = workspace.CurrentCamera
+            local moveDir = LocalPlayer.Character.Humanoid.MoveDirection
+            
+            if FlyBodyVelocity and FlyBodyGyro then
+                FlyBodyGyro.CFrame = camera.CFrame
+                if moveDir.Magnitude > 0 then
+                    FlyBodyVelocity.Velocity = camera.CFrame.LookVector * (moveDir.Z * -States.FlySpeed) + camera.CFrame.RightVector * (moveDir.X * States.FlySpeed)
+                else
+                    FlyBodyVelocity.Velocity = Vector3.zero
+                end
             end
         end
-    end
+    end)
 end)
 
 -- =================================================================
--- 6. ระบบล่องหน (Local Invisibility)
+-- 6. ระบบล่องหน
 -- =================================================================
-PlayerTab:CreateSection("สถานะอวตาร (Avatar Status)")
+PlayerTab:CreateSection("สถานะตัวละคร")
 
 PlayerTab:CreateToggle({
-    Name = "เปิดใช้งาน ล่องหน (Client-Side)",
+    Name = "ล่องหน (Client-Side)",
     CurrentValue = false,
     Flag = "ToggleInvisible",
     Callback = function(Value)
         States.Invisible = Value
-        local char = LocalPlayer.Character
-        if char then
-            for _, part in pairs(char:GetDescendants()) do
-                if part:IsA("BasePart") or part:IsA("Decal") then
-                    if States.Invisible then
-                        if not part:GetAttribute("OriginalTransparency") then
-                            part:SetAttribute("OriginalTransparency", part.Transparency)
+        pcall(function()
+            local char = LocalPlayer.Character
+            if char then
+                for _, part in pairs(char:GetDescendants()) do
+                    if part:IsA("BasePart") or part:IsA("Decal") then
+                        if States.Invisible then
+                            if not part:GetAttribute("OrigTrans") then part:SetAttribute("OrigTrans", part.Transparency) end
+                            part.Transparency = 1
+                        else
+                            if part:GetAttribute("OrigTrans") then part.Transparency = part:GetAttribute("OrigTrans") end
                         end
-                        part.Transparency = 1
-                    else
-                        if part:GetAttribute("OriginalTransparency") then
-                            part.Transparency = part:GetAttribute("OriginalTransparency")
-                        end
+                    elseif part:IsA("Accessory") and part:FindFirstChild("Handle") then
+                        part.Handle.Transparency = States.Invisible and 1 or 0
                     end
-                elseif part:IsA("Accessory") and part:FindFirstChild("Handle") then
-                    part.Handle.Transparency = States.Invisible and 1 or 0
                 end
             end
-        end
+        end)
     end,
 })
