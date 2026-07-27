@@ -1,5 +1,5 @@
 -- =================================================================
--- ⚡ Executor Panel - Premium Glassmorphism UI (Roblox In-Game)
+-- ⚡ Executor Panel - Ultimate Version (Roblox In-Game UI)
 -- =================================================================
 
 local Players = game:GetService("Players")
@@ -24,13 +24,13 @@ local CurrentThemeName = "Purple"
 -- States & Logic Variables
 local States = {
     BoostFPS = false,
-    AutoFarm = false, -- สถานะสำหรับฟาร์มดาบอัตโนมัติ
+    AutoFarm = false, -- ระบบฟาร์มดาบอัตโนมัติ (ninjaEvent)
     WalkSpeed = 16,
     JumpHeight = 50,
     FakeFPSValue = 60
 }
 
--- Thread สำหรับ Auto Farm ดาบอัตโนมัติ (ninjaEvent)
+-- Thread สำหรับ Auto Farm ดาบอัตโนมัติ (ย้ำการกด Remote Ninja Event)
 task.spawn(function()
     while true do
         if States.AutoFarm then
@@ -46,13 +46,35 @@ end)
 -- 1. ScreenGui Setup
 -- =================================================================
 local ScreenGui = Instance.new("ScreenGui")
-ScreenGui.Name = "ExecutorPanel_Premium"
+ScreenGui.Name = "ExecutorPanel_Ultimate"
 ScreenGui.ResetOnSpawn = false
 pcall(function() ScreenGui.Parent = game:GetService("CoreGui") end)
 if not ScreenGui.Parent then ScreenGui.Parent = LocalPlayer:WaitForChild("PlayerGui") end
 
 -- =================================================================
--- 2. Main Frame (760x420, Center, Glassmorphism, Responsive)
+-- 2. Floating Open/Close Button (ปุ่มเปิด-ปิด UI แยกบนหน้าจอ)
+-- =================================================================
+local OpenButton = Instance.new("TextButton")
+OpenButton.Name = "FloatingToggleBtn"
+OpenButton.Size = UDim2.new(0, 48, 0, 48)
+OpenButton.Position = UDim2.new(0, 20, 0.5, -24)
+OpenButton.BackgroundColor3 = Color3.fromRGB(15, 15, 19)
+OpenButton.BackgroundTransparency = 0.2
+OpenButton.Text = "⚡"
+OpenButton.TextColor3 = CurrentTheme
+OpenButton.Font = Enum.Font.GothamBold
+OpenButton.TextSize = 20
+OpenButton.Parent = ScreenGui
+
+Instance.new("UICorner", OpenButton).CornerRadius = UDim.new(1, 0)
+local OpenButtonStroke = Instance.new("UIStroke")
+OpenButtonStroke.Thickness = 1.5
+OpenButtonStroke.Color = Color3.fromRGB(255, 255, 255)
+OpenButtonStroke.Transparency = 0.7
+OpenButtonStroke.Parent = OpenButton
+
+-- =================================================================
+-- 3. Main Frame (760x420, Center, Glassmorphism, Responsive)
 -- =================================================================
 local MainFrame = Instance.new("Frame")
 MainFrame.Name = "MainFrame"
@@ -75,7 +97,7 @@ MainStroke.Color = Color3.fromRGB(255, 255, 255)
 MainStroke.Transparency = 0.8
 MainStroke.Parent = MainFrame
 
--- เปิด UI Animation (Scale 90% -> 100%, Fade In)
+-- เปิด UI Animation เริ่มต้น (Scale 90% -> 100%, Fade In)
 MainFrame.Size = UDim2.new(0, 760 * 0.9, 0, 420 * 0.9)
 MainFrame.BackgroundTransparency = 1
 
@@ -85,7 +107,7 @@ TweenService:Create(MainFrame, TweenInfo.new(0.35, Enum.EasingStyle.Back, Enum.E
 }):Play()
 
 -- =================================================================
--- 3. Header (45px Height, Minimize, Close Buttons)
+-- 4. Header (45px Height, Minimize, Close Buttons)
 -- =================================================================
 local Header = Instance.new("Frame")
 Header.Size = UDim2.new(1, 0, 0, 45)
@@ -116,7 +138,7 @@ StatusLabel.TextSize = 12
 StatusLabel.TextXAlignment = Enum.TextXAlignment.Right
 StatusLabel.Parent = Header
 
--- Close Button (X)
+-- Close Button (✕)
 local CloseButton = Instance.new("TextButton")
 CloseButton.Size = UDim2.new(0, 30, 0, 30)
 CloseButton.Position = UDim2.new(1, -38, 0.5, -15)
@@ -128,7 +150,7 @@ CloseButton.Font = Enum.Font.GothamBold
 CloseButton.TextSize = 14
 CloseButton.Parent = Header
 
--- Minimize Button (-)
+-- Minimize Button (─)
 local MinimizeButton = Instance.new("TextButton")
 MinimizeButton.Size = UDim2.new(0, 30, 0, 30)
 MinimizeButton.Position = UDim2.new(1, -74, 0.5, -15)
@@ -140,7 +162,7 @@ MinimizeButton.Font = Enum.Font.GothamBold
 MinimizeButton.TextSize = 14
 MinimizeButton.Parent = Header
 
--- Hover & Click Effects for Window Controls
+-- Hover & Click Effects
 CloseButton.MouseEnter:Connect(function()
     TweenService:Create(CloseButton, TweenInfo.new(0.2), {TextColor3 = Color3.fromRGB(239, 68, 68)}):Play()
 end)
@@ -155,7 +177,7 @@ MinimizeButton.MouseLeave:Connect(function()
     TweenService:Create(MinimizeButton, TweenInfo.new(0.2), {TextColor3 = Color3.fromRGB(180, 180, 180)}):Play()
 end)
 
--- Close Function with Animation
+-- Close Function (ซ่อน UI หลัก)
 CloseButton.MouseButton1Click:Connect(function()
     local tw = TweenService:Create(MainFrame, TweenInfo.new(0.25, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
         Size = UDim2.new(0, 760 * 0.9, 0, 420 * 0.9),
@@ -163,11 +185,11 @@ CloseButton.MouseButton1Click:Connect(function()
     })
     tw:Play()
     tw.Completed:Connect(function()
-        ScreenGui:Destroy()
+        MainFrame.Visible = false
     end)
 end)
 
--- Minimize / Maximize Function
+-- Minimize Function (ย่อหน้าต่างเหลือเฉพาะ Header)
 local isMinimized = false
 MinimizeButton.MouseButton1Click:Connect(function()
     isMinimized = not isMinimized
@@ -177,8 +199,30 @@ MinimizeButton.MouseButton1Click:Connect(function()
     }):Play()
 end)
 
+-- Floating Button Open/Close Logic
+OpenButton.MouseButton1Click:Connect(function()
+    if not MainFrame.Visible then
+        MainFrame.Visible = true
+        MainFrame.Size = UDim2.new(0, 760 * 0.9, 0, 420 * 0.9)
+        MainFrame.BackgroundTransparency = 1
+        TweenService:Create(MainFrame, TweenInfo.new(0.35, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
+            Size = UDim2.new(0, 760, 0, 420),
+            BackgroundTransparency = 0.2
+        }):Play()
+    else
+        local tw = TweenService:Create(MainFrame, TweenInfo.new(0.25, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+            Size = UDim2.new(0, 760 * 0.9, 0, 420 * 0.9),
+            BackgroundTransparency = 1
+        })
+        tw:Play()
+        tw.Completed:Connect(function()
+            MainFrame.Visible = false
+        end)
+    end
+end)
+
 -- =================================================================
--- 4. Sidebar & Navigation (Home, Player, Settings)
+-- 5. Sidebar & Navigation (Home, Player, Settings)
 -- =================================================================
 local Sidebar = Instance.new("Frame")
 Sidebar.Size = UDim2.new(0, 180, 1, -45)
@@ -290,7 +334,7 @@ CreateNavButton("Player", "👤 Player", 65)
 CreateNavButton("Settings", "⚙️ Settings", 115)
 
 -- =================================================================
--- 5. Page: Home (Boost FPS & Auto Sword Farm)
+-- 6. Page: Home (Boost FPS & Auto Sword Farm)
 -- =================================================================
 local HomePage = CreatePage("Home")
 
@@ -374,13 +418,7 @@ local function CreateToggleCard(titleText, descText, callback)
     end)
 
     RegisterThemeColor(ToggleBg, "BackgroundColor3")
-    return ToggleBg, function(val)
-        toggled = val
-        local goalPos = toggled and UDim2.new(1, -21, 0.5, -9) or UDim2.new(0, 3, 0.5, -9)
-        local goalColor = toggled and CurrentTheme or Color3.fromRGB(45, 45, 55)
-        TweenService:Create(ToggleCircle, TweenInfo.new(0.2), {Position = goalPos}):Play()
-        TweenService:Create(ToggleBg, TweenInfo.new(0.2), {BackgroundColor3 = goalColor}):Play()
-    end
+    return ToggleBg
 end
 
 -- 1. Boost FPS Toggle
@@ -401,7 +439,7 @@ CreateToggleCard("Boost FPS", "Optimizes rendering performance (Fake 1000 FPS)",
     end
 end)
 
--- 2. Auto Sword Farm Toggle (ninjaEvent) ตามคำขอ
+-- 2. Auto Sword Farm Toggle (ใช้ ninjaEvent:FireServer แบบวนลูป)
 CreateToggleCard("Auto Sword Farm", "Automatically fires ninjaEvent for sword training", function(state)
     States.AutoFarm = state
 end)
@@ -452,7 +490,7 @@ MemDisplay.TextXAlignment = Enum.TextXAlignment.Left
 MemDisplay.Parent = StatsCard
 
 -- =================================================================
--- 6. Page: Player (WalkSpeed & JumpHeight Sliders)
+-- 7. Page: Player (WalkSpeed & JumpHeight Sliders)
 -- =================================================================
 local PlayerPage = CreatePage("Player")
 
@@ -553,7 +591,7 @@ CreateSlider("Jump Height", 50, 200, 50, function(v)
 end)
 
 -- =================================================================
--- 7. Page: Settings (7 Colors Theme Switcher)
+-- 8. Page: Settings (7 Colors Theme Switcher)
 -- =================================================================
 local SettingsPage = CreatePage("Settings")
 
@@ -626,6 +664,9 @@ local function CreateColorButton(colorName, colorValue)
             end)
         end
         CurrentTheme = colorValue
+        
+        -- เปลี่ยนสีปุ่มลอยเปิด-ปิด UI ตาม Theme ด้วย
+        TweenService:Create(OpenButton, twInfo, {TextColor3 = colorValue}):Play()
     end)
 end
 
@@ -636,6 +677,9 @@ CreateColorButton("Yellow", THEMES.Yellow)
 CreateColorButton("Red", THEMES.Red)
 CreateColorButton("Pink", THEMES.Pink)
 CreateColorButton("Black", THEMES.Black)
+
+-- ลงทะเบียนปุ่มลอยเปิด-ปิด UI ให้เปลี่ยนสีตามธีม
+RegisterThemeColor(OpenButton, "TextColor3")
 
 -- Default Page open
 SwitchPage("Home")
