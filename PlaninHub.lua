@@ -1,5 +1,5 @@
 -- =================================================================
--- 🐟 Planin Hub - Advanced Gaming Intelligence (Roblox Native UI)
+-- 🐟 Planin Hub - Advanced Gaming Intelligence (Exact HTML Replica)
 -- =================================================================
 
 local Players = game:GetService("Players")
@@ -7,16 +7,16 @@ local RunService = game:GetService("RunService")
 local TweenService = game:GetService("TweenService")
 local LocalPlayer = Players.LocalPlayer
 
-local UI_COLORS = {
-    Background = Color3.fromRGB(12, 12, 12),
-    Panel = Color3.fromRGB(20, 20, 20),
-    Accent = Color3.fromRGB(255, 0, 0), -- Default Accent
-    Text = Color3.fromRGB(255, 255, 255),
-    Muted = Color3.fromRGB(150, 150, 150)
+local THEME = {
+    BgColor = Color3.fromRGB(12, 12, 12),
+    SidebarBg = Color3.fromRGB(20, 20, 20),
+    CardBg = Color3.fromRGB(30, 30, 30),
+    Accent = Color3.fromRGB(255, 0, 0),
+    TextWhite = Color3.fromRGB(255, 255, 255),
+    TextMuted = Color3.fromRGB(176, 176, 176)
 }
 
 local States = {
-    AccentColor = UI_COLORS.Accent,
     WalkSpeed = 16,
     JumpPower = 50,
     GodMode = false,
@@ -24,267 +24,320 @@ local States = {
 }
 
 -- =================================================================
--- 1. สร้าง ScreenGui
+-- 1. สร้าง ScreenGui หลัก
 -- =================================================================
 local ScreenGui = Instance.new("ScreenGui")
-ScreenGui.Name = "PlaninHub_Advanced"
+ScreenGui.Name = "PlaninHub_HTML_Style"
 ScreenGui.ResetOnSpawn = false
-
-local success, _ = pcall(function() ScreenGui.Parent = game:GetService("CoreGui") end)
-if not success then ScreenGui.Parent = LocalPlayer:WaitForChild("PlayerGui") end
+pcall(function() ScreenGui.Parent = game:GetService("CoreGui") end)
+if not ScreenGui.Parent then ScreenGui.Parent = LocalPlayer:WaitForChild("PlayerGui") end
 
 -- =================================================================
--- 2. สร้างโครงสร้างหลัก (Main Frame & Sidebar)
+-- 2. โครงสร้างหน้าต่างหลัก (Main Layout)
 -- =================================================================
 local MainFrame = Instance.new("Frame")
-MainFrame.Size = UDim2.new(0, 750, 0, 450)
-MainFrame.Position = UDim2.new(0.5, -375, 0.5, -225)
-MainFrame.BackgroundColor3 = UI_COLORS.Background
+MainFrame.Size = UDim2.new(0, 850, 0, 520)
+MainFrame.Position = UDim2.new(0.5, -425, 0.5, -260)
+MainFrame.BackgroundColor3 = THEME.BgColor
 MainFrame.BorderSizePixel = 0
 MainFrame.ClipsDescendants = true
 MainFrame.Parent = ScreenGui
 
-local UICorner = Instance.new("UICorner")
-UICorner.CornerRadius = UDim.new(0, 12)
-UICorner.Parent = MainFrame
+local MainCorner = Instance.new("UICorner")
+MainCorner.CornerRadius = UDim.new(0, 8)
+MainCorner.Parent = MainFrame
 
-local TopBar = Instance.new("Frame")
-TopBar.Size = UDim2.new(1, 0, 0, 40)
-TopBar.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
-TopBar.BorderSizePixel = 0
-TopBar.Parent = MainFrame
+-- Top Navbar
+local Navbar = Instance.new("Frame")
+Navbar.Size = UDim2.new(1, 0, 0, 50)
+Navbar.BackgroundColor3 = Color3.fromRGB(12, 12, 12)
+Navbar.BorderSizePixel = 0
+Navbar.Parent = MainFrame
 
-local TitleText = Instance.new("TextLabel")
-TitleText.Size = UDim2.new(0, 200, 1, 0)
-TitleText.Position = UDim2.new(0, 15, 0, 0)
-TitleText.BackgroundTransparency = 1
-TitleText.Text = "PLANIN HUB"
-TitleText.TextColor3 = UI_COLORS.Text
-TitleText.Font = Enum.Font.GothamBold
-TitleText.TextSize = 14
-TitleText.TextXAlignment = Enum.TextXAlignment.Left
-TitleText.Parent = TopBar
+local NavTitle = Instance.new("TextLabel")
+NavTitle.Size = UDim2.new(0, 300, 1, 0)
+NavTitle.Position = UDim2.new(0, 20, 0, 0)
+NavTitle.BackgroundTransparency = 1
+NavTitle.Text = "PLANIN HUB   DISCORD.GG/G4fwZWnUTA"
+NavTitle.TextColor3 = THEME.TextMuted
+NavTitle.Font = Enum.Font.Code
+NavTitle.TextSize = 12
+NavTitle.TextXAlignment = Enum.TextXAlignment.Left
+NavTitle.Parent = Navbar
 
-local StatusText = Instance.new("TextLabel")
-StatusText.Size = UDim2.new(0, 150, 1, 0)
-StatusText.Position = UDim2.new(1, -165, 0, 0)
-StatusText.BackgroundTransparency = 1
-StatusText.Text = "🟢 Live Status: Working"
-StatusText.TextColor3 = Color3.fromRGB(100, 255, 100)
-StatusText.Font = Enum.Font.Gotham
-StatusText.TextSize = 12
-StatusText.TextXAlignment = Enum.TextXAlignment.Right
-StatusText.Parent = TopBar
+local LiveStatus = Instance.new("TextLabel")
+LiveStatus.Size = UDim2.new(0, 200, 1, 0)
+LiveStatus.Position = UDim2.new(1, -220, 0, 0)
+LiveStatus.BackgroundTransparency = 1
+LiveStatus.Text = "●  LIVE STATUS: WORKING"
+LiveStatus.TextColor3 = Color3.fromRGB(34, 197, 94)
+LiveStatus.Font = Enum.Font.GothamBold
+LiveStatus.TextSize = 11
+LiveStatus.TextXAlignment = Enum.TextXAlignment.Right
+LiveStatus.Parent = Navbar
 
+-- Sidebar
 local Sidebar = Instance.new("Frame")
-Sidebar.Size = UDim2.new(0, 160, 1, -40)
-Sidebar.Position = UDim2.new(0, 0, 0, 40)
-Sidebar.BackgroundColor3 = UI_COLORS.Panel
-Sidebar.BackgroundTransparency = 0.5
+Sidebar.Size = UDim2.new(0, 220, 1, -50)
+Sidebar.Position = UDim2.new(0, 0, 0, 50)
+Sidebar.BackgroundColor3 = THEME.SidebarBg
+Sidebar.BackgroundTransparency = 0.6
 Sidebar.BorderSizePixel = 0
 Sidebar.Parent = MainFrame
 
-local ContentContainer = Instance.new("Frame")
-ContentContainer.Size = UDim2.new(1, -160, 1, -40)
-ContentContainer.Position = UDim2.new(0, 160, 0, 40)
-ContentContainer.BackgroundTransparency = 1
-ContentContainer.Parent = MainFrame
+-- Content Area
+local Container = Instance.new("Frame")
+Container.Size = UDim2.new(1, -220, 1, -50)
+Container.Position = UDim2.new(0, 220, 0, 50)
+Container.BackgroundTransparency = 1
+Container.Parent = MainFrame
 
 -- =================================================================
--- 3. ระบบ Tab Management
+-- 3. ระบบ Tab & Navigation แบบเป๊ะตาม HTML
 -- =================================================================
-local Tabs = {}
-local TabButtons = {}
+local Pages = {}
+local NavButtons = {}
+local AccentElements = {} -- เก็บ element ที่ต้องเปลี่ยนสีตาม Accent Color
+
+local function RegisterAccentElement(element, prop)
+    table.insert(AccentElements, {Obj = element, Prop = prop})
+end
+
+local function UpdateAccentColors(newColor)
+    THEME.Accent = newColor
+    for _, item in ipairs(AccentElements) do
+        pcall(function()
+            item.Obj[item.Prop] = newColor
+        end)
+    end
+end
 
 local function SwitchTab(tabName)
-    for name, frame in pairs(Tabs) do
-        frame.Visible = (name == tabName)
+    for name, page in pairs(Pages) do
+        page.Visible = (name == tabName)
     end
-    for name, btn in pairs(TabButtons) do
+    for name, btnData in pairs(NavButtons) do
+        local btn = btnData.Button
+        local indicator = btnData.Indicator
         if name == tabName then
-            btn.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
-            btn.TextColor3 = States.AccentColor
+            btn.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+            btn.BackgroundTransparency = 0.9
+            btn.TextColor3 = THEME.TextWhite
+            indicator.Visible = true
         else
-            btn.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+            btn.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
             btn.BackgroundTransparency = 1
-            btn.TextColor3 = UI_COLORS.Muted
+            btn.TextColor3 = THEME.TextMuted
+            indicator.Visible = false
         end
     end
 end
 
-local function CreateTabButton(name, yPos)
+local function CreateNavButton(name, text, yPos)
     local Btn = Instance.new("TextButton")
-    Btn.Size = UDim2.new(1, -20, 0, 35)
+    Btn.Size = UDim2.new(1, -20, 0, 40)
     Btn.Position = UDim2.new(0, 10, 0, yPos)
-    Btn.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+    Btn.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
     Btn.BackgroundTransparency = 1
-    Btn.Text = name
-    Btn.TextColor3 = UI_COLORS.Muted
+    Btn.Text = "      " .. text
+    Btn.TextColor3 = THEME.TextMuted
     Btn.Font = Enum.Font.GothamSemibold
     Btn.TextSize = 13
+    Btn.TextXAlignment = Enum.TextXAlignment.Left
     Btn.AutoButtonColor = false
     Btn.Parent = Sidebar
     
-    local BtnCorner = Instance.new("UICorner")
-    BtnCorner.CornerRadius = UDim.new(0, 6)
-    BtnCorner.Parent = Btn
+    Instance.new("UICorner", Btn).CornerRadius = UDim.new(0, 6)
+    
+    -- Active Indicator แถบสีแดงด้านซ้าย
+    local Indicator = Instance.new("Frame")
+    Indicator.Size = UDim2.new(0, 3, 1, 0)
+    Indicator.BackgroundColor3 = THEME.Accent
+    Indicator.Visible = false
+    Indicator.Parent = Btn
+    RegisterAccentElement(Indicator, "BackgroundColor3")
     
     Btn.MouseButton1Click:Connect(function()
         SwitchTab(name)
     end)
     
-    TabButtons[name] = Btn
-    return Btn
+    NavButtons[name] = {Button = Btn, Indicator = Indicator}
 end
 
-local function CreatePage(name)
+local function CreatePageFrame(name)
     local Page = Instance.new("ScrollingFrame")
-    Page.Size = UDim2.new(1, -40, 1, -40)
-    Page.Position = UDim2.new(0, 20, 0, 20)
+    Page.Size = UDim2.new(1, 0, 1, 0)
     Page.BackgroundTransparency = 1
-    Page.ScrollBarThickness = 4
+    Page.ScrollBarThickness = 3
     Page.Visible = false
-    Page.Parent = ContentContainer
+    Page.Parent = Container
     
-    local UIListLayout = Instance.new("UIListLayout")
-    UIListLayout.SortOrder = Enum.SortOrder.LayoutOrder
-    UIListLayout.Padding = UDim.new(0, 15)
-    UIListLayout.Parent = Page
+    local UIList = Instance.new("UIListLayout")
+    UIList.SortOrder = Enum.SortOrder.LayoutOrder
+    UIList.Padding = UDim.new(0, 20)
+    UIList.Parent = Page
     
-    Tabs[name] = Page
+    local UIPadding = Instance.new("UIPadding")
+    UIPadding.PaddingTop = UDim.new(0, 40)
+    UIPadding.PaddingLeft = UDim.new(0, 40)
+    UIPadding.PaddingRight = UDim.new(0, 40)
+    UIPadding.Parent = Page
+    
+    Pages[name] = Page
     return Page
 end
 
+CreateNavButton("home", "Home", 20)
+CreateNavButton("character", "Character", 70)
+CreateNavButton("settings", "Preferences", 125)
+
 -- =================================================================
--- 4. สร้างหน้า UI ตาม HTML (Home, Character, Settings)
+-- 4. สร้างเนื้อหาแต่ละหน้า (HTML Replica)
 -- =================================================================
 
--- สร้างปุ่ม Sidebar
-CreateTabButton("Home", 20)
-CreateTabButton("Character", 65)
-CreateTabButton("Settings", 120)
+---------------------------------------------------------------------
+-- PAGE: HOME
+---------------------------------------------------------------------
+local HomePage = CreatePageFrame("home")
 
--- [PAGE: Home]
-local HomePage = CreatePage("Home")
 local HomeTitle = Instance.new("TextLabel")
-HomeTitle.Size = UDim2.new(1, 0, 0, 40)
-HomeTitle.BackgroundTransparency = 1
-HomeTitle.Text = "Home."
-HomeTitle.TextColor3 = UI_COLORS.Text
+HomeTitle.Size = UDim2.new(1, 0, 0, 50)
+HomeTitle.BackgroundTransparency = platform or 1
+HomeTitle.Text = "Home  •"
+HomeTitle.TextColor3 = THEME.TextWhite
 HomeTitle.Font = Enum.Font.GothamBold
 HomeTitle.TextSize = 32
 HomeTitle.TextXAlignment = Enum.TextXAlignment.Left
 HomeTitle.Parent = HomePage
+RegisterAccentElement(HomeTitle, "TextColor3")
 
-local HomeDesc = HomeTitle:Clone()
-HomeDesc.Size = UDim2.new(1, 0, 0, 20)
-HomeDesc.Text = "Welcome back. Everything is synced and ready to perform."
-HomeDesc.TextColor3 = UI_COLORS.Muted
+local HomeDesc = Instance.new("TextLabel")
+HomeDesc.Size = UDim2.new(1, 0, 0, 30)
+HomeDesc.BackgroundTransparency = 1
+HomeDesc.Text = "Welcome back. Everything is synced and ready to perform. Your configuration \"Optimized_v2\" is loaded."
+HomeDesc.TextColor3 = THEME.TextMuted
 HomeDesc.Font = Enum.Font.Gotham
-HomeDesc.TextSize = 14
+HomeDesc.TextSize = 13
+HomeDesc.TextXAlignment = Enum.TextXAlignment.Left
 HomeDesc.Parent = HomePage
 
--- [PAGE: Character]
-local CharPage = CreatePage("Character")
-local CharTitle = HomeTitle:Clone()
-CharTitle.Text = "Character."
+-- Grid Cards ในหน้า Home
+local HomeGrid = Instance.new("Frame")
+HomeGrid.Size = UDim2.new(1, 0, 0, 120)
+HomeGrid.BackgroundTransparency = 1
+HomeGrid.Parent = HomePage
+
+local GridFlow = Instance.new("UIListLayout")
+GridFlow.FillDirection = Enum.FillDirection.Horizontal
+GridFlow.Padding = UDim.new(0, 15)
+GridFlow.Parent = HomeGrid
+
+local function CreateHomeCard(title, desc)
+    local Card = Instance.new("Frame")
+    Card.Size = UDim2.new(0.48, 0, 1, 0)
+    Card.BackgroundColor3 = THEME.CardBg
+    Card.BackgroundTransparency = 0.8
+    Card.Parent = HomeGrid
+    Instance.new("UICorner", Card).CornerRadius = UDim.new(0, 12)
+    
+    local T = Instance.new("TextLabel")
+    T.Size = UDim2.new(1, -60, 0, 25)
+    T.Position = UDim2.new(0, 20, 0, 20)
+    T.BackgroundTransparency = 1
+    T.Text = title
+    T.TextColor3 = THEME.TextWhite
+    T.Font = Enum.Font.GothamBold
+    T.TextSize = 15
+    T.TextXAlignment = Enum.TextXAlignment.Left
+    T.Parent = Card
+    
+    local D = Instance.new("TextLabel")
+    D.Size = UDim2.new(1, -60, 0, 40)
+    D.Position = UDim2.new(0, 20, 0, 45)
+    D.BackgroundTransparency = 1
+    D.Text = desc
+    D.TextColor3 = THEME.TextMuted
+    D.Font = Enum.Font.Gotham
+    D.TextSize = 11
+    D.TextWrapped = true
+    D.TextXAlignment = Enum.TextXAlignment.Left
+    D.Parent = Card
+end
+
+CreateHomeCard("Auto Farm", "Automatically harvest resources in the current zone.")
+CreateHomeCard("Auto Click", "Simulate rapid clicking at the cursor position.")
+
+---------------------------------------------------------------------
+-- PAGE: CHARACTER
+---------------------------------------------------------------------
+local CharPage = CreatePageFrame("character")
+
+local CharTitle = Instance.new("TextLabel")
+CharTitle.Size = UDim2.new(1, 0, 0, 50)
+CharTitle.BackgroundTransparency = 1
+CharTitle.Text = "Character  •"
+CharTitle.TextColor3 = THEME.TextWhite
+CharTitle.Font = Enum.Font.GothamBold
+CharTitle.TextSize = 32
+CharTitle.TextXAlignment = Enum.TextXAlignment.Left
 CharTitle.Parent = CharPage
+RegisterAccentElement(CharTitle, "TextColor3")
 
--- ฟังก์ชันสร้าง Input Panel (สำหรับ WalkSpeed / JumpPower)
-local function CreateInputPanel(parent, title, defaultVal, callback)
-    local Panel = Instance.new("Frame")
-    Panel.Size = UDim2.new(1, 0, 0, 60)
-    Panel.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
-    Panel.Parent = parent
-    Instance.new("UICorner", Panel).CornerRadius = UDim.new(0, 8)
+local CharDesc = Instance.new("TextLabel")
+CharDesc.Size = UDim2.new(1, 0, 0, 20)
+CharDesc.BackgroundTransparency = 1
+CharDesc.Text = "Modify your interaction with the world and physical attributes."
+CharDesc.TextColor3 = THEME.TextMuted
+CharDesc.Font = Enum.Font.Gotham
+CharDesc.TextSize = 13
+CharDesc.TextXAlignment = Enum.TextXAlignment.Left
+CharDesc.Parent = CharPage
+
+-- Character Inputs / Toggles Box
+local CharBox = Instance.new("Frame")
+CharBox.Size = UDim2.new(1, 0, 0, 180)
+CharBox.BackgroundColor3 = THEME.CardBg
+CharBox.BackgroundTransparency = 0.8
+CharBox.Parent = CharPage
+Instance.new("UICorner", CharBox).CornerRadius = UDim.new(0, 12)
+
+local function AddSpeedControl(yOffset, labelText, defaultVal, callback)
+    local L = Instance.new("TextLabel")
+    L.Size = UDim2.new(0, 200, 0, 20)
+    L.Position = UDim2.new(0, 20, 0, yOffset)
+    L.BackgroundTransparency = 1
+    L.Text = labelText
+    L.TextColor3 = THEME.TextWhite
+    L.Font = Enum.Font.GothamBold
+    L.TextSize = 13
+    L.TextXAlignment = Enum.TextXAlignment.Left
+    L.Parent = CharBox
     
-    local Label = Instance.new("TextLabel")
-    Label.Size = UDim2.new(0, 200, 1, 0)
-    Label.Position = UDim2.new(0, 15, 0, 0)
-    Label.BackgroundTransparency = 1
-    Label.Text = title
-    Label.TextColor3 = UI_COLORS.Text
-    Label.Font = Enum.Font.GothamSemibold
-    Label.TextSize = 14
-    Label.TextXAlignment = Enum.TextXAlignment.Left
-    Label.Parent = Panel
+    local Box = Instance.new("TextBox")
+    Box.Size = UDim2.new(0, 60, 0, 30)
+    Box.Position = UDim2.new(1, -80, 0, yOffset - 5)
+    Box.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+    Box.Text = tostring(defaultVal)
+    Box.TextColor3 = THEME.TextWhite
+    Box.Font = Enum.Font.Gotham
+    Box.TextSize = 13
+    Box.Parent = CharBox
+    Instance.new("UICorner", Box).CornerRadius = UDim.new(0, 6)
     
-    local Input = Instance.new("TextBox")
-    Input.Size = UDim2.new(0, 80, 0, 30)
-    Input.Position = UDim2.new(1, -100, 0.5, -15)
-    Input.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
-    Input.TextColor3 = UI_COLORS.Text
-    Input.Text = tostring(defaultVal)
-    Input.Font = Enum.Font.Gotham
-    Input.TextSize = 14
-    Input.Parent = Panel
-    Instance.new("UICorner", Input).CornerRadius = UDim.new(0, 6)
-    
-    Input.FocusLost:Connect(function()
-        local val = tonumber(Input.Text)
-        if val then callback(val) else Input.Text = tostring(defaultVal) end
+    Box.FocusLost:Connect(function()
+        local v = tonumber(Box.Text)
+        if v then callback(v) else Box.Text = tostring(defaultVal) end
     end)
 end
 
--- ฟังก์ชันสร้าง Toggle Panel (สำหรับ God Mode / Invisibility)
-local function CreateTogglePanel(parent, title, callback)
-    local Panel = Instance.new("Frame")
-    Panel.Size = UDim2.new(1, 0, 0, 50)
-    Panel.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
-    Panel.Parent = parent
-    Instance.new("UICorner", Panel).CornerRadius = UDim.new(0, 8)
-    
-    local Label = Instance.new("TextLabel")
-    Label.Size = UDim2.new(0, 200, 1, 0)
-    Label.Position = UDim2.new(0, 15, 0, 0)
-    Label.BackgroundTransparency = 1
-    Label.Text = title
-    Label.TextColor3 = UI_COLORS.Text
-    Label.Font = Enum.Font.GothamSemibold
-    Label.TextSize = 14
-    Label.TextXAlignment = Enum.TextXAlignment.Left
-    Label.Parent = Panel
-    
-    local ToggleBtn = Instance.new("TextButton")
-    ToggleBtn.Size = UDim2.new(0, 40, 0, 20)
-    ToggleBtn.Position = UDim2.new(1, -55, 0.5, -10)
-    ToggleBtn.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
-    ToggleBtn.Text = ""
-    ToggleBtn.Parent = Panel
-    Instance.new("UICorner", ToggleBtn).CornerRadius = UDim.new(1, 0)
-    
-    local Indicator = Instance.new("Frame")
-    Indicator.Size = UDim2.new(0, 16, 0, 16)
-    Indicator.Position = UDim2.new(0, 2, 0.5, -8)
-    Indicator.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-    Indicator.Parent = ToggleBtn
-    Instance.new("UICorner", Indicator).CornerRadius = UDim.new(1, 0)
-    
-    local toggled = false
-    ToggleBtn.MouseButton1Click:Connect(function()
-        toggled = not toggled
-        callback(toggled)
-        local goal = {}
-        if toggled then
-            goal.Position = UDim2.new(1, -18, 0.5, -8)
-            ToggleBtn.BackgroundColor3 = States.AccentColor
-        else
-            goal.Position = UDim2.new(0, 2, 0.5, -8)
-            ToggleBtn.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
-        end
-        TweenService:Create(Indicator, TweenInfo.new(0.2), goal):Play()
-    end)
-end
-
--- เพิ่มระบบลงใน Character Tab
-CreateInputPanel(CharPage, "Walk Speed", 16, function(val)
+AddSpeedControl(30, "Walk Speed", 16, function(val)
     States.WalkSpeed = val
     if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") then
         LocalPlayer.Character.Humanoid.WalkSpeed = val
     end
 end)
 
-CreateInputPanel(CharPage, "Jump Power", 50, function(val)
+AddSpeedControl(90, "Jump Power", 50, function(val)
     States.JumpPower = val
     if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") then
         LocalPlayer.Character.Humanoid.UseJumpPower = true
@@ -292,70 +345,83 @@ CreateInputPanel(CharPage, "Jump Power", 50, function(val)
     end
 end)
 
-CreateTogglePanel(CharPage, "Invisibility (Client)", function(val)
-    States.Invisibility = val
-    local char = LocalPlayer.Character
-    if char then
-        for _, part in pairs(char:GetDescendants()) do
-            if part:IsA("BasePart") or part:IsA("Decal") then
-                if val then
-                    if not part:GetAttribute("OrigTrans") then part:SetAttribute("OrigTrans", part.Transparency) end
-                    part.Transparency = 1
-                else
-                    if part:GetAttribute("OrigTrans") then part.Transparency = part:GetAttribute("OrigTrans") end
-                end
-            end
-        end
-    end
-end)
+---------------------------------------------------------------------
+-- PAGE: SETTINGS (Preferences)
+---------------------------------------------------------------------
+local SettingsPage = CreatePageFrame("settings")
 
--- [PAGE: Settings]
-local SettingsPage = CreatePage("Settings")
-local SettingsTitle = HomeTitle:Clone()
-SettingsTitle.Text = "Settings."
+local SettingsTitle = Instance.new("TextLabel")
+SettingsTitle.Size = UDim2.new(1, 0, 0, 50)
+SettingsTitle.BackgroundTransparency = 1
+SettingsTitle.Text = "Settings  •"
+SettingsTitle.TextColor3 = THEME.TextWhite
+SettingsTitle.Font = Enum.Font.GothamBold
+SettingsTitle.TextSize = 32
+SettingsTitle.TextXAlignment = Enum.TextXAlignment.Left
 SettingsTitle.Parent = SettingsPage
+RegisterAccentElement(SettingsTitle, "TextColor3")
 
-local SettingsDesc = HomeDesc:Clone()
+local SettingsDesc = Instance.new("TextLabel")
+SettingsDesc.Size = UDim2.new(1, 0, 0, 20)
+SettingsDesc.BackgroundTransparency = 1
 SettingsDesc.Text = "Customize the look and feel of your Planin Hub experience."
+SettingsDesc.TextColor3 = THEME.TextMuted
+SettingsDesc.Font = Enum.Font.Gotham
+SettingsDesc.TextSize = 13
+SettingsDesc.TextXAlignment = Enum.TextXAlignment.Left
 SettingsDesc.Parent = SettingsPage
 
-local function CreateColorButton(parent, color)
+local SettingsBox = Instance.new("Frame")
+SettingsBox.Size = UDim2.new(1, 0, 0, 200)
+SettingsBox.BackgroundColor3 = THEME.CardBg
+SettingsBox.BackgroundTransparency = 0.8
+SettingsBox.Parent = SettingsPage
+Instance.new("UICorner", SettingsBox).CornerRadius = UDim.new(0, 12)
+
+local AccLabel = Instance.new("TextLabel")
+AccLabel.Size = UDim2.new(1, -40, 0, 30)
+AccLabel.Position = UDim2.new(0, 20, 0, 20)
+AccLabel.BackgroundTransparency = 1
+AccLabel.Text = "ACTIVE ACCENT COLOR"
+AccLabel.TextColor3 = THEME.TextMuted
+AccLabel.Font = Enum.Font.GothamBold
+AccLabel.TextSize = 11
+AccLabel.TextXAlignment = Enum.TextXAlignment.Left
+AccLabel.Parent = SettingsBox
+
+local ColorRow = Instance.new("Frame")
+ColorRow.Size = UDim2.new(1, -40, 0, 45)
+ColorRow.Position = UDim2.new(0, 20, 0, 55)
+ColorRow.BackgroundTransparency = 1
+ColorRow.Parent = SettingsBox
+
+local ColorList = Instance.new("UIListLayout")
+ColorList.FillDirection = Enum.FillDirection.Horizontal
+ColorList.Padding = UDim.new(0, 12)
+ColorList.Parent = ColorRow
+
+local function CreateColorSelector(color)
     local Btn = Instance.new("TextButton")
-    Btn.Size = UDim2.new(0, 30, 0, 30)
+    Btn.Size = UDim2.new(0, 40, 0, 40)
     Btn.BackgroundColor3 = color
     Btn.Text = ""
-    Btn.Parent = parent
-    Instance.new("UICorner", Btn).CornerRadius = UDim.new(1, 0)
-    Instance.new("UIStroke", Btn).Color = Color3.fromRGB(255, 255, 255)
+    Btn.Parent = ColorRow
+    Instance.new("UICorner", Btn).CornerRadius = UDim.new(0, 8)
     
     Btn.MouseButton1Click:Connect(function()
-        States.AccentColor = color
-        -- อัปเดตสีทั้ง UI
-        SwitchTab("Settings") -- รีเฟรชปุ่ม Sidebar
-        HomeTitle.TextColor3 = color
-        CharTitle.TextColor3 = color
-        SettingsTitle.TextColor3 = color
+        UpdateAccentColors(color)
     end)
 end
 
-local ColorPanel = Instance.new("Frame")
-ColorPanel.Size = UDim2.new(1, 0, 0, 60)
-ColorPanel.BackgroundTransparency = 1
-ColorPanel.Parent = SettingsPage
-
-local ColorLayout = Instance.new("UIListLayout")
-ColorLayout.FillDirection = Enum.FillDirection.Horizontal
-ColorLayout.Padding = UDim.new(0, 10)
-ColorLayout.Parent = ColorPanel
-
-CreateColorButton(ColorPanel, Color3.fromRGB(255, 0, 0))    -- Red
-CreateColorButton(ColorPanel, Color3.fromRGB(59, 130, 246)) -- Blue
-CreateColorButton(ColorPanel, Color3.fromRGB(16, 185, 129)) -- Green
-CreateColorButton(ColorPanel, Color3.fromRGB(245, 158, 11)) -- Orange
-CreateColorButton(ColorPanel, Color3.fromRGB(168, 85, 247)) -- Purple
+CreateColorSelector(Color3.fromRGB(255, 0, 0))    -- Red
+CreateColorSelector(Color3.fromRGB(59, 130, 246)) -- Blue
+CreateColorSelector(Color3.fromRGB(16, 185, 129)) -- Green
+CreateColorSelector(Color3.fromRGB(245, 158, 11)) -- Orange
+CreateColorSelector(Color3.fromRGB(168, 85, 247)) -- Purple
+CreateColorSelector(Color3.fromRGB(255, 255, 255)) -- White
 
 -- =================================================================
--- 5. ระบบ Loop Update (บังคับค่าต่างๆ ให้เสถียร)
+-- 5. ระบบ Loop รักษาสถานะตัวละคร
 -- =================================================================
 RunService.RenderStepped:Connect(function()
     pcall(function()
@@ -368,5 +434,5 @@ RunService.RenderStepped:Connect(function()
     end)
 end)
 
--- Initialize
-SwitchTab("Home")
+-- เริ่มต้นเปิดหน้า Home เป็นค่าเริ่มต้น
+SwitchTab("home")
