@@ -1,165 +1,223 @@
---[[
-    ================================================================
-    SABER / NINJA AUTOMATION SYSTEM (HIGH-FREQUENCY EDITION)
-    ================================================================
-    Author  : Dev Framework
-    Engine  : Luau (Roblox Studio / Executor Compatible)
-    Version : 2.1.0 (Ultra-Fast Trigger)
---]]
+-- =================================================================
+-- 🐟 PlaninHub - Speed, Fly & Invisible
+-- UI Library: Rayfield (Modern Dark Theme)
+-- =================================================================
 
-local TweenService = game:GetService("TweenService")
+local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
 local Players = game:GetService("Players")
-local CoreGui = game:GetService("CoreGui")
-
+local RunService = game:GetService("RunService")
+local UserInputService = game:GetService("UserInputService")
 local LocalPlayer = Players.LocalPlayer
 
---------------------------------------------------------------------
--- CONFIGURATION & SYSTEM PARAMETERS
---------------------------------------------------------------------
-local Settings = {
-    AutoFarmEnabled = false,
-    AttackInterval = 0.01, -- ระยะเวลาหน่วงใน 1 ลูป (วินาที)
-    MultiHitsPerLoop = 5,  -- จำนวนครั้งที่ส่งสัญญาณภายใน 1 ลูป (5 ครั้ง / 0.01 วินาที)
-    EventName = "ninjaEvent"
+-- ตัวแปรควบคุมระบบ
+local States = {
+    WalkSpeedEnabled = false,
+    WalkSpeed = 16,
+    FlyEnabled = false,
+    FlySpeed = 50,
+    Invisible = false
 }
 
---------------------------------------------------------------------
--- USER INTERFACE INITIALIZATION
---------------------------------------------------------------------
+-- =================================================================
+-- 1. สร้างปุ่มลอยสำหรับ เปิด/ปิด UI (Toggle Button)
+-- =================================================================
 local ScreenGui = Instance.new("ScreenGui")
-ScreenGui.Name = "AutomationFrameworkUI"
-ScreenGui.ResetOnSpawn = false
--- ป้องกัน Error กรณี CoreGui ถูกบล็อกในบาง Executor
-local success, err = pcall(function()
-    ScreenGui.Parent = CoreGui
+ScreenGui.Name = "PlaninHubToggle"
+ScreenGui.Parent = game:GetService("CoreGui") or LocalPlayer:WaitForChild("PlayerGui")
+
+local ToggleUIBtn = Instance.new("TextButton")
+ToggleUIBtn.Size = UDim2.new(0, 120, 0, 40)
+ToggleUIBtn.Position = UDim2.new(0, 20, 0, 20)
+ToggleUIBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 35)
+ToggleUIBtn.Text = "PlaninHub"
+ToggleUIBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+ToggleUIBtn.Font = Enum.Font.GothamBold
+ToggleUIBtn.TextSize = 14
+ToggleUIBtn.Parent = ScreenGui
+
+local UICorner = Instance.new("UICorner")
+UICorner.CornerRadius = UDim.new(0, 8)
+UICorner.Parent = ToggleUIBtn
+
+local UIStroke = Instance.new("UIStroke")
+UIStroke.Color = Color3.fromRGB(150, 100, 255)
+UIStroke.Thickness = 2
+UIStroke.Parent = ToggleUIBtn
+
+-- ระบบซ่อน/แสดง หน้าต่าง Rayfield
+local UIVisible = true
+ToggleUIBtn.MouseButton1Click:Connect(function()
+    UIVisible = not UIVisible
+    -- Rayfield ไม่มีฟังก์ชัน Toggle แบบตรงๆ แต่ใช้การกดปุ่ม RightControl เป็นค่าเริ่มต้น
+    -- เราจึงจำลองการกดปุ่มเพื่อเปิด/ปิดหน้าต่าง
+    game:GetService("VirtualInputManager"):SendKeyEvent(true, Enum.KeyCode.RightControl, false, game)
+    game:GetService("VirtualInputManager"):SendKeyEvent(false, Enum.KeyCode.RightControl, false, game)
 end)
-if not success then
-    ScreenGui.Parent = LocalPlayer:WaitForChild("PlayerGui")
-end
 
--- Main Container
-local MainContainer = Instance.new("Frame")
-MainContainer.Name = "MainContainer"
-MainContainer.Size = UDim2.new(0, 300, 0, 180)
-MainContainer.Position = UDim2.new(0.5, -150, 0.5, -90)
-MainContainer.BackgroundColor3 = Color3.fromRGB(18, 22, 28)
-MainContainer.BorderSizePixel = 0
-MainContainer.Active = true
-MainContainer.Draggable = true
-MainContainer.Parent = ScreenGui
+-- =================================================================
+-- 2. สร้างหน้าต่างหลัก (Main Window)
+-- =================================================================
+local Window = Rayfield:CreateWindow({
+    Name = "PlaninHub",
+    LoadingTitle = "กำลังโหลดสคริปต์...",
+    LoadingSubtitle = "ความเร็ว, บิน, ล่องหน",
+    ConfigurationSaving = { Enabled = false },
+    Discord = { Enabled = false },
+    KeySystem = false
+})
 
-local MainCorner = Instance.new("UICorner")
-MainCorner.CornerRadius = UDim.new(0, 12)
-MainCorner.Parent = MainContainer
+-- สร้างแถบเมนู (Tabs)
+local MainTab = Window:CreateTab("เมนูหลัก", "home")
+local PlayerTab = Window:CreateTab("ตัวละคร", "user")
 
-local MainBorder = Instance.new("UIStroke")
-MainBorder.Color = Color3.fromRGB(45, 55, 72)
-MainBorder.Thickness = 1.5
-MainBorder.Parent = MainContainer
+-- =================================================================
+-- 3. ระบบวิ่งเร็ว (WalkSpeed)
+-- =================================================================
+MainTab:CreateSection("ตั้งค่าความเร็ว (WalkSpeed)")
 
--- Header Title
-local TitleLabel = Instance.new("TextLabel")
-TitleLabel.Name = "TitleLabel"
-TitleLabel.Size = UDim2.new(1, -30, 0, 40)
-TitleLabel.Position = UDim2.new(0, 15, 0, 5)
-TitleLabel.BackgroundTransparency = 1
-TitleLabel.Text = "SYSTEM AUTOMATION"
-TitleLabel.TextColor3 = Color3.fromRGB(240, 243, 246)
-TitleLabel.TextSize = 14
-TitleLabel.Font = Enum.Font.GothamBold
-TitleLabel.TextXAlignment = Enum.TextXAlignment.Left
-TitleLabel.Parent = MainContainer
+MainTab:CreateToggle({
+    Name = "เปิดใช้งาน วิ่งเร็ว",
+    CurrentValue = false,
+    Flag = "ToggleWalkSpeed",
+    Callback = function(Value)
+        States.WalkSpeedEnabled = Value
+    end,
+})
 
--- Subtitle / Status
-local StatusLabel = Instance.new("TextLabel")
-StatusLabel.Name = "StatusLabel"
-StatusLabel.Size = UDim2.new(1, -30, 0, 20)
-StatusLabel.Position = UDim2.new(0, 15, 0, 38)
-StatusLabel.BackgroundTransparency = 1
-StatusLabel.Text = "Status: Standby"
-StatusLabel.TextColor3 = Color3.fromRGB(120, 140, 160)
-StatusLabel.TextSize = 11
-StatusLabel.Font = Enum.Font.Gotham
-StatusLabel.TextXAlignment = Enum.TextXAlignment.Left
-StatusLabel.Parent = MainContainer
+MainTab:CreateSlider({
+    Name = "ระดับความเร็ว",
+    Range = {16, 500},
+    Increment = 1,
+    Suffix = "Speed",
+    CurrentValue = 16,
+    Flag = "SliderWalkSpeed",
+    Callback = function(Value)
+        States.WalkSpeed = Value
+    end,
+})
 
--- Action Button
-local ToggleButton = Instance.new("TextButton")
-ToggleButton.Name = "ToggleButton"
-ToggleButton.Size = UDim2.new(1, -30, 0, 45)
-ToggleButton.Position = UDim2.new(0, 15, 1, -60)
-ToggleButton.BackgroundColor3 = Color3.fromRGB(0, 122, 255)
-ToggleButton.Text = "INITIALIZE AUTOMATION"
-ToggleButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-ToggleButton.TextSize = 12
-ToggleButton.Font = Enum.Font.GothamBold
-ToggleButton.AutoButtonColor = false
-ToggleButton.Parent = MainContainer
-
-local BtnCorner = Instance.new("UICorner")
-BtnCorner.CornerRadius = UDim.new(0, 8)
-BtnCorner.Parent = ToggleButton
-
---------------------------------------------------------------------
--- HELPER FUNCTIONS
---------------------------------------------------------------------
--- ค้นหา RemoteEvent อย่างปลอดภัย
-local function GetTargetEvent()
-    local character = LocalPlayer.Character
-    local event = LocalPlayer:FindFirstChild(Settings.EventName)
-    
-    if not event and character then
-        event = character:FindFirstChild(Settings.EventName)
+-- ลูปบังคับความเร็ว (ป้องกันเกมรีเซ็ตค่า)
+RunService.RenderStepped:Connect(function()
+    if States.WalkSpeedEnabled and LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") then
+        LocalPlayer.Character.Humanoid.WalkSpeed = States.WalkSpeed
     end
-    
-    return event
-end
+end)
 
--- อัปเดตสไตล์ UI ด้วย Animation
-local function UpdateUIState(isActive)
-    local targetColor = isActive and Color3.fromRGB(225, 45, 75) or Color3.fromRGB(0, 122, 255)
-    local targetText = isActive and "TERMINATE AUTOMATION" or "INITIALIZE AUTOMATION"
-    local statusText = isActive and "Status: Active (High-Frequency Mode)" or "Status: Standby"
-    local statusColor = isActive and Color3.fromRGB(50, 215, 120) or Color3.fromRGB(120, 140, 160)
+-- =================================================================
+-- 4. ระบบบิน (Fly System)
+-- =================================================================
+MainTab:CreateSection("ตั้งค่าการบิน (Fly)")
 
-    TweenService:Create(ToggleButton, TweenInfo.new(0.25, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
-        BackgroundColor3 = targetColor
-    }):Play()
+local FlyBodyVelocity = nil
+local FlyBodyGyro = nil
 
-    ToggleButton.Text = targetText
-    StatusLabel.Text = statusText
-    StatusLabel.TextColor3 = statusColor
-end
-
---------------------------------------------------------------------
--- CORE LOGIC (HIGH-FREQUENCY EXECUTION ENGINE)
---------------------------------------------------------------------
-local function StartAutoFarmProcess()
-    task.spawn(function()
-        while Settings.AutoFarmEnabled do
-            local remoteEvent = GetTargetEvent()
+MainTab:CreateToggle({
+    Name = "เปิดใช้งาน บิน",
+    CurrentValue = false,
+    Flag = "ToggleFly",
+    Callback = function(Value)
+        States.FlyEnabled = Value
+        local char = LocalPlayer.Character
+        
+        if States.FlyEnabled and char and char:FindFirstChild("HumanoidRootPart") then
+            local hrp = char.HumanoidRootPart
             
-            if remoteEvent then
-                -- ส่งสัญญาณซ้ำ 5 ครั้งตามการตั้งค่าความเร็วขั้นสุด
-                for i = 1, Settings.MultiHitsPerLoop do
-                    remoteEvent:FireServer("swingKatana")
+            FlyBodyVelocity = Instance.new("BodyVelocity")
+            FlyBodyVelocity.MaxForce = Vector3.new(100000, 100000, 100000)
+            FlyBodyVelocity.Velocity = Vector3.zero
+            FlyBodyVelocity.Parent = hrp
+            
+            FlyBodyGyro = Instance.new("BodyGyro")
+            FlyBodyGyro.MaxTorque = Vector3.new(100000, 100000, 100000)
+            FlyBodyGyro.P = 10000
+            FlyBodyGyro.CFrame = hrp.CFrame
+            FlyBodyGyro.Parent = hrp
+            
+            char.Humanoid.PlatformStand = true
+        else
+            if FlyBodyVelocity then FlyBodyVelocity:Destroy() end
+            if FlyBodyGyro then FlyBodyGyro:Destroy() end
+            if char and char:FindFirstChild("Humanoid") then
+                char.Humanoid.PlatformStand = false
+            end
+        end
+    end,
+})
+
+MainTab:CreateSlider({
+    Name = "ความเร็วการบิน",
+    Range = {10, 500},
+    Increment = 1,
+    Suffix = "Speed",
+    CurrentValue = 50,
+    Flag = "SliderFlySpeed",
+    Callback = function(Value)
+        States.FlySpeed = Value
+    end,
+})
+
+-- ลูปควบคุมทิศทางการบินตามมุมกล้อง
+RunService.RenderStepped:Connect(function()
+    if States.FlyEnabled and LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
+        local hrp = LocalPlayer.Character.HumanoidRootPart
+        local camera = workspace.CurrentCamera
+        local moveDir = LocalPlayer.Character.Humanoid.MoveDirection
+        
+        if FlyBodyVelocity and FlyBodyGyro then
+            FlyBodyGyro.CFrame = camera.CFrame
+            if moveDir.Magnitude > 0 then
+                FlyBodyVelocity.Velocity = camera.CFrame.LookVector * (moveDir.Z * -States.FlySpeed) 
+                                         + camera.CFrame.RightVector * (moveDir.X * States.FlySpeed)
+            else
+                FlyBodyVelocity.Velocity = Vector3.zero
+            end
+        end
+    end
+end)
+
+-- =================================================================
+-- 5. ระบบล่องหน (Local Invisibility)
+-- =================================================================
+PlayerTab:CreateSection("สถานะอวตาร (Avatar Status)")
+
+PlayerTab:CreateToggle({
+    Name = "เปิดใช้งาน ล่องหน (Client-Side)",
+    CurrentValue = false,
+    Flag = "ToggleInvisible",
+    Callback = function(Value)
+        States.Invisible = Value
+        local char = LocalPlayer.Character
+        if char then
+            for _, part in pairs(char:GetDescendants()) do
+                if part:IsA("BasePart") or part:IsA("Decal") then
+                    if States.Invisible then
+                        -- เก็บค่าโปร่งใสเดิมไว้ (ถ้ายังไม่มี)
+                        if not part:GetAttribute("OriginalTransparency") then
+                            part:SetAttribute("OriginalTransparency", part.Transparency)
+                        end
+                        part.Transparency = 1
+                    else
+                        -- คืนค่าโปร่งใสเดิม
+                        if part:GetAttribute("OriginalTransparency") then
+                            part.Transparency = part:GetAttribute("OriginalTransparency")
+                        end
+                    end
+                elseif part:IsA("Accessory") and part:FindFirstChild("Handle") then
+                    if States.Invisible then
+                        part.Handle.Transparency = 1
+                    else
+                        part.Handle.Transparency = 0
+                    end
                 end
             end
-            
-            -- ควบคุมความถี่ของ Loop ให้อยู่ที่ 0.01 วินาที
-            task.wait(Settings.AttackInterval)
         end
-    end)
-end
+    end,
+})
 
---------------------------------------------------------------------
--- EVENT LISTENERS
---------------------------------------------------------------------
-ToggleButton.MouseButton1Click:Connect(function()
-    Settings.AutoFarmEnabled = not Settings.AutoFarmEnabled
-    UpdateUIState(Settings.AutoFarmEnabled)
-    
-    if Settings.AutoFarmEnabled then
-        StartAutoFarmProcess()
-    end
-end)
+-- แจ้งเตือนเสร็จสิ้น
+Rayfield:Notify({
+    Title = "พร้อมใช้งาน!",
+    Content = "PlaninHub โหลดสำเร็จแล้ว ขอให้สนุกครับ",
+    Duration = 5,
+    Image = 4483362458,
+})
