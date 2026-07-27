@@ -1,10 +1,10 @@
 --[[
     ================================================================
-    SABER / NINJA AUTOMATION SYSTEM (PROFESSIONAL EDITION)
+    SABER / NINJA AUTOMATION SYSTEM (HIGH-FREQUENCY EDITION)
     ================================================================
     Author  : Dev Framework
     Engine  : Luau (Roblox Studio / Executor Compatible)
-    Version : 2.0.0
+    Version : 2.1.0 (Ultra-Fast Trigger)
 --]]
 
 local TweenService = game:GetService("TweenService")
@@ -14,12 +14,12 @@ local CoreGui = game:GetService("CoreGui")
 local LocalPlayer = Players.LocalPlayer
 
 --------------------------------------------------------------------
--- CONFIGURATION & STATE MANAGEMENT
+-- CONFIGURATION & SYSTEM PARAMETERS
 --------------------------------------------------------------------
 local Settings = {
     AutoFarmEnabled = false,
-    AttackInterval = 0.001, -- ความเร็วในการส่งสัญญาณ (วินาที)
-    MultiHitsPerLoop = 3,  -- จำนวนครั้งที่ย่อส่ง Event ต่อรอบ
+    AttackInterval = 0.01, -- ระยะเวลาหน่วงใน 1 ลูป (วินาที)
+    MultiHitsPerLoop = 5,  -- จำนวนครั้งที่ส่งสัญญาณภายใน 1 ลูป (5 ครั้ง / 0.01 วินาที)
     EventName = "ninjaEvent"
 }
 
@@ -29,7 +29,13 @@ local Settings = {
 local ScreenGui = Instance.new("ScreenGui")
 ScreenGui.Name = "AutomationFrameworkUI"
 ScreenGui.ResetOnSpawn = false
-ScreenGui.Parent = CoreGui or LocalPlayer:WaitForChild("PlayerGui")
+-- ป้องกัน Error กรณี CoreGui ถูกบล็อกในบาง Executor
+local success, err = pcall(function()
+    ScreenGui.Parent = CoreGui
+end)
+if not success then
+    ScreenGui.Parent = LocalPlayer:WaitForChild("PlayerGui")
+end
 
 -- Main Container
 local MainContainer = Instance.new("Frame")
@@ -83,7 +89,7 @@ ToggleButton.Name = "ToggleButton"
 ToggleButton.Size = UDim2.new(1, -30, 0, 45)
 ToggleButton.Position = UDim2.new(0, 15, 1, -60)
 ToggleButton.BackgroundColor3 = Color3.fromRGB(0, 122, 255)
-ToggleButton.Text = "START AUTOMATION"
+ToggleButton.Text = "INITIALIZE AUTOMATION"
 ToggleButton.TextColor3 = Color3.fromRGB(255, 255, 255)
 ToggleButton.TextSize = 12
 ToggleButton.Font = Enum.Font.GothamBold
@@ -112,8 +118,8 @@ end
 -- อัปเดตสไตล์ UI ด้วย Animation
 local function UpdateUIState(isActive)
     local targetColor = isActive and Color3.fromRGB(225, 45, 75) or Color3.fromRGB(0, 122, 255)
-    local targetText = isActive and "STOP AUTOMATION" or "START AUTOMATION"
-    local statusText = isActive and "Status: Active (Running...)" or "Status: Standby"
+    local targetText = isActive and "TERMINATE AUTOMATION" or "INITIALIZE AUTOMATION"
+    local statusText = isActive and "Status: Active (High-Frequency Mode)" or "Status: Standby"
     local statusColor = isActive and Color3.fromRGB(50, 215, 120) or Color3.fromRGB(120, 140, 160)
 
     TweenService:Create(ToggleButton, TweenInfo.new(0.25, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
@@ -126,7 +132,7 @@ local function UpdateUIState(isActive)
 end
 
 --------------------------------------------------------------------
--- CORE LOGIC (EXECUTION ENGINE)
+-- CORE LOGIC (HIGH-FREQUENCY EXECUTION ENGINE)
 --------------------------------------------------------------------
 local function StartAutoFarmProcess()
     task.spawn(function()
@@ -134,12 +140,13 @@ local function StartAutoFarmProcess()
             local remoteEvent = GetTargetEvent()
             
             if remoteEvent then
-                -- ย้ำส่งสัญญาณตามจำนวน MultiHitsPerLoop เพื่อประสิทธิภาพสูงสุด
+                -- ส่งสัญญาณซ้ำ 5 ครั้งตามการตั้งค่าความเร็วขั้นสุด
                 for i = 1, Settings.MultiHitsPerLoop do
                     remoteEvent:FireServer("swingKatana")
                 end
             end
             
+            -- ควบคุมความถี่ของ Loop ให้อยู่ที่ 0.01 วินาที
             task.wait(Settings.AttackInterval)
         end
     end)
