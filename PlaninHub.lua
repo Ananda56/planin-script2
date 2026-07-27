@@ -1,145 +1,158 @@
--- =================================================================
--- 🚀 HIGH-PERFORMANCE AUTO FARM GUI (ULTIMATE VERSION)
--- =================================================================
+--[[
+    ================================================================
+    SABER / NINJA AUTOMATION SYSTEM (PROFESSIONAL EDITION)
+    ================================================================
+    Author  : Dev Framework
+    Engine  : Luau (Roblox Studio / Executor Compatible)
+    Version : 2.0.0
+--]]
 
--- 1. Create UI Elements (Glassmorphism & Neon Design)
-local ScreenGui = Instance.new("ScreenGui")
-local MainFrame = Instance.new("Frame")
-local UICorner = Instance.new("UICorner")
-local UIStroke = Instance.new("UIStroke")
-local Title = Instance.new("TextLabel")
-local ToggleBtn = Instance.new("TextButton")
-local BtnCorner = Instance.new("UICorner")
-local BtnStroke = Instance.new("UIStroke")
-local StatusLabel = Instance.new("TextLabel")
-
--- Parent ScreenGui
-ScreenGui.Name = "NinjaCyberHUD"
-ScreenGui.Parent = game:GetService("CoreGui") or game:GetService("Players").LocalPlayer:WaitForChild("PlayerGui")
-ScreenGui.ResetOnSpawn = false
-
--- Main Card Frame (Glassmorphism Effect)
-MainFrame.Name = "MainFrame"
-MainFrame.Parent = ScreenGui
-MainFrame.BackgroundColor3 = Color3.fromRGB(15, 20, 30)
-MainFrame.BackgroundTransparency = 0.25 -- กระจกฝ้า
-MainFrame.Position = UDim2.new(0.5, -125, 0.5, -100)
-MainFrame.Size = UDim2.new(0, 250, 0, 200)
-MainFrame.Active = true
-MainFrame.Draggable = true -- ลากลานหน้าจอได้
-
-UICorner.CornerRadius = UDim.new(0, 16)
-UICorner.Parent = MainFrame
-
--- Neon Cyber Border
-UIStroke.Parent = MainFrame
-UIStroke.Color = Color3.fromRGB(0, 242, 254)
-UIStroke.Thickness = 2
-UIStroke.Transparency = 0.3
-
--- Title Label
-Title.Name = "Title"
-Title.Parent = MainFrame
-Title.BackgroundTransparency = 1
-Title.Position = UDim2.new(0, 0, 0.08, 0)
-Title.Size = UDim2.new(1, 0, 0, 30)
-Title.Font = Enum.Font.GothamBold
-Title.Text = "NINJA AUTO FARM VIP"
-Title.TextColor3 = Color3.fromRGB(255, 255, 255)
-Title.TextSize = 16
-
--- Status Label
-StatusLabel.Name = "StatusLabel"
-StatusLabel.Parent = MainFrame
-StatusLabel.BackgroundTransparency = 1
-StatusLabel.Position = UDim2.new(0, 0, 0.28, 0)
-StatusLabel.Size = UDim2.new(1, 0, 0, 20)
-StatusLabel.Font = Enum.Font.Gotham
-StatusLabel.Text = "สถานะ: 🔴 ปิดใช้งาน"
-StatusLabel.TextColor3 = Color3.fromRGB(180, 180, 180)
-StatusLabel.TextSize = 12
-
--- Modern Cyber Button
-ToggleBtn.Name = "ToggleBtn"
-ToggleBtn.Parent = MainFrame
-ToggleBtn.BackgroundColor3 = Color3.fromRGB(0, 150, 255)
-ToggleBtn.Position = UDim2.new(0.1, 0, 0.5, 0)
-ToggleBtn.Size = UDim2.new(0.8, 0, 0, 45)
-ToggleBtn.Font = Enum.Font.GothamBold
-ToggleBtn.Text = "⚡ เปิดใช้งาน AUTO FARM"
-ToggleBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-ToggleBtn.TextSize = 13
-ToggleBtn.AutoButtonColor = false
-
-BtnCorner.CornerRadius = UDim.new(0, 10)
-BtnCorner.Parent = ToggleBtn
-
-BtnStroke.Parent = ToggleBtn
-BtnStroke.Color = Color3.fromRGB(0, 242, 254)
-BtnStroke.Thickness = 1.5
-
--- =================================================================
--- ⚡ LOGIC & HIGH-SPEED REMOTE AUTO FARM
--- =================================================================
-
-local Player = game:GetService("Players").LocalPlayer
 local TweenService = game:GetService("TweenService")
-local IsFarming = false
+local Players = game:GetService("Players")
+local CoreGui = game:GetService("CoreGui")
 
--- JS-Style Hover & Click Animations (Tweening)
-local function animateButton(color, scale)
-	TweenService:Create(ToggleBtn, TweenInfo.new(0.2), {BackgroundColor3 = color}):Play()
-	TweenService:Create(MainFrame, TweenInfo.new(0.2), {Size = scale}):Play()
+local LocalPlayer = Players.LocalPlayer
+
+--------------------------------------------------------------------
+-- CONFIGURATION & STATE MANAGEMENT
+--------------------------------------------------------------------
+local Settings = {
+    AutoFarmEnabled = false,
+    AttackInterval = 0.001, -- ความเร็วในการส่งสัญญาณ (วินาที)
+    MultiHitsPerLoop = 3,  -- จำนวนครั้งที่ย่อส่ง Event ต่อรอบ
+    EventName = "ninjaEvent"
+}
+
+--------------------------------------------------------------------
+-- USER INTERFACE INITIALIZATION
+--------------------------------------------------------------------
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Name = "AutomationFrameworkUI"
+ScreenGui.ResetOnSpawn = false
+ScreenGui.Parent = CoreGui or LocalPlayer:WaitForChild("PlayerGui")
+
+-- Main Container
+local MainContainer = Instance.new("Frame")
+MainContainer.Name = "MainContainer"
+MainContainer.Size = UDim2.new(0, 300, 0, 180)
+MainContainer.Position = UDim2.new(0.5, -150, 0.5, -90)
+MainContainer.BackgroundColor3 = Color3.fromRGB(18, 22, 28)
+MainContainer.BorderSizePixel = 0
+MainContainer.Active = true
+MainContainer.Draggable = true
+MainContainer.Parent = ScreenGui
+
+local MainCorner = Instance.new("UICorner")
+MainCorner.CornerRadius = UDim.new(0, 12)
+MainCorner.Parent = MainContainer
+
+local MainBorder = Instance.new("UIStroke")
+MainBorder.Color = Color3.fromRGB(45, 55, 72)
+MainBorder.Thickness = 1.5
+MainBorder.Parent = MainContainer
+
+-- Header Title
+local TitleLabel = Instance.new("TextLabel")
+TitleLabel.Name = "TitleLabel"
+TitleLabel.Size = UDim2.new(1, -30, 0, 40)
+TitleLabel.Position = UDim2.new(0, 15, 0, 5)
+TitleLabel.BackgroundTransparency = 1
+TitleLabel.Text = "SYSTEM AUTOMATION"
+TitleLabel.TextColor3 = Color3.fromRGB(240, 243, 246)
+TitleLabel.TextSize = 14
+TitleLabel.Font = Enum.Font.GothamBold
+TitleLabel.TextXAlignment = Enum.TextXAlignment.Left
+TitleLabel.Parent = MainContainer
+
+-- Subtitle / Status
+local StatusLabel = Instance.new("TextLabel")
+StatusLabel.Name = "StatusLabel"
+StatusLabel.Size = UDim2.new(1, -30, 0, 20)
+StatusLabel.Position = UDim2.new(0, 15, 0, 38)
+StatusLabel.BackgroundTransparency = 1
+StatusLabel.Text = "Status: Standby"
+StatusLabel.TextColor3 = Color3.fromRGB(120, 140, 160)
+StatusLabel.TextSize = 11
+StatusLabel.Font = Enum.Font.Gotham
+StatusLabel.TextXAlignment = Enum.TextXAlignment.Left
+StatusLabel.Parent = MainContainer
+
+-- Action Button
+local ToggleButton = Instance.new("TextButton")
+ToggleButton.Name = "ToggleButton"
+ToggleButton.Size = UDim2.new(1, -30, 0, 45)
+ToggleButton.Position = UDim2.new(0, 15, 1, -60)
+ToggleButton.BackgroundColor3 = Color3.fromRGB(0, 122, 255)
+ToggleButton.Text = "START AUTOMATION"
+ToggleButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+ToggleButton.TextSize = 12
+ToggleButton.Font = Enum.Font.GothamBold
+ToggleButton.AutoButtonColor = false
+ToggleButton.Parent = MainContainer
+
+local BtnCorner = Instance.new("UICorner")
+BtnCorner.CornerRadius = UDim.new(0, 8)
+BtnCorner.Parent = ToggleButton
+
+--------------------------------------------------------------------
+-- HELPER FUNCTIONS
+--------------------------------------------------------------------
+-- ค้นหา RemoteEvent อย่างปลอดภัย
+local function GetTargetEvent()
+    local character = LocalPlayer.Character
+    local event = LocalPlayer:FindFirstChild(Settings.EventName)
+    
+    if not event and character then
+        event = character:FindFirstChild(Settings.EventName)
+    end
+    
+    return event
 end
 
-ToggleBtn.MouseEnter:Connect(function()
-	if not IsFarming then
-		TweenService:Create(BtnStroke, TweenInfo.new(0.2), {Transparency = 0}):Play()
-	end
-end)
+-- อัปเดตสไตล์ UI ด้วย Animation
+local function UpdateUIState(isActive)
+    local targetColor = isActive and Color3.fromRGB(225, 45, 75) or Color3.fromRGB(0, 122, 255)
+    local targetText = isActive and "STOP AUTOMATION" or "START AUTOMATION"
+    local statusText = isActive and "Status: Active (Running...)" or "Status: Standby"
+    local statusColor = isActive and Color3.fromRGB(50, 215, 120) or Color3.fromRGB(120, 140, 160)
 
-ToggleBtn.MouseLeave:Connect(function()
-	if not IsFarming then
-		TweenService:Create(BtnStroke, TweenInfo.new(0.2), {Transparency = 0.5}):Play()
-	end
-end)
+    TweenService:Create(ToggleButton, TweenInfo.new(0.25, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+        BackgroundColor3 = targetColor
+    }):Play()
 
--- Toggle Switch Logic
-ToggleBtn.MouseButton1Click:Connect(function()
-	IsFarming = not IsFarming
-	
-	if IsFarming then
-		-- เปลี่ยนเป็นสีแดง / Active State
-		animateButton(Color3.fromRGB(255, 50, 80), UDim2.new(0, 255, 0, 205))
-		ToggleBtn.Text = "🔴 กำลังฟาร์มรัวๆ (ACTIVE)"
-		StatusLabel.Text = "สถานะ: 🟢 ฟาร์มอัตโนมัติทำงานอยู่"
-		StatusLabel.TextColor3 = Color3.fromRGB(0, 255, 150)
-		BtnStroke.Color = Color3.fromRGB(255, 50, 80)
-		
-		-- Loop ส่ง Remote Event แบบ Ultra Fast
-		task.spawn(function()
-			while IsFarming do
-				-- ค้นหา ninjaEvent ทั้งในตัวผู้เล่นและตัวละครเพื่อป้องกันการหาไม่เจอ
-				local character = Player.Character
-				local ninjaEvent = Player:FindFirstChild("ninjaEvent") or (character and character:FindFirstChild("ninjaEvent"))
-				
-				if ninjaEvent then
-					-- ย้ำส่งสัญญาณ 3 รอบใน 1 Loop (Turbo Fire)
-					ninjaEvent:FireServer("swingKatana")
-					ninjaEvent:FireServer("swingKatana")
-					ninjaEvent:FireServer("swingKatana")
-				end
-				
-				-- ใช้ task.wait ระดับ MS ที่เร็วและเสถียรที่สุด ไม่ทำให้เกมค้าง
-				task.wait(0.001)
-			end
-		end)
-	else
-		-- คืนค่ากลับเป็นสีฟ้า / Normal State
-		animateButton(Color3.fromRGB(0, 150, 255), UDim2.new(0, 250, 0, 200))
-		ToggleBtn.Text = "⚡ เปิดใช้งาน AUTO FARM"
-		StatusLabel.Text = "สถานะ: 🔴 ปิดใช้งาน"
-		StatusLabel.TextColor3 = Color3.fromRGB(180, 180, 180)
-		BtnStroke.Color = Color3.fromRGB(0, 242, 254)
-	end
+    ToggleButton.Text = targetText
+    StatusLabel.Text = statusText
+    StatusLabel.TextColor3 = statusColor
+end
+
+--------------------------------------------------------------------
+-- CORE LOGIC (EXECUTION ENGINE)
+--------------------------------------------------------------------
+local function StartAutoFarmProcess()
+    task.spawn(function()
+        while Settings.AutoFarmEnabled do
+            local remoteEvent = GetTargetEvent()
+            
+            if remoteEvent then
+                -- ย้ำส่งสัญญาณตามจำนวน MultiHitsPerLoop เพื่อประสิทธิภาพสูงสุด
+                for i = 1, Settings.MultiHitsPerLoop do
+                    remoteEvent:FireServer("swingKatana")
+                end
+            end
+            
+            task.wait(Settings.AttackInterval)
+        end
+    end)
+end
+
+--------------------------------------------------------------------
+-- EVENT LISTENERS
+--------------------------------------------------------------------
+ToggleButton.MouseButton1Click:Connect(function()
+    Settings.AutoFarmEnabled = not Settings.AutoFarmEnabled
+    UpdateUIState(Settings.AutoFarmEnabled)
+    
+    if Settings.AutoFarmEnabled then
+        StartAutoFarmProcess()
+    end
 end)
